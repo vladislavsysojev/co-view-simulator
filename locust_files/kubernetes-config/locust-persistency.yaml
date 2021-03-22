@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    name: dataaccess
+spec:
+    containers:
+    - name: alpine
+      image: alpine:latest
+      command: ['sleep', 'infinity']
+      volumeMounts:
+      - name: locuststatistic
+        mountPath: /locust_statistic
+    volumes:
+    - name: locuststatistic
+      persistentVolumeClaim:
+        claimName: load-statistics

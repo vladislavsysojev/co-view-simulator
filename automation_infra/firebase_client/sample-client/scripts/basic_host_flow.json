@@ -1,0 +1,11 @@
+{
+  "apiUrl": "http://localhost:8080",
+  "actions": [
+    {"type": "connect"},
+    {"type": "create_room",
+     "payload": { "roomId": "1234" }
+     "save": { "roomId": "room1" }},
+    {"type": "join_room",
+     "payload": { "roomId": "$room1" }}
+  ]
+}

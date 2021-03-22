@@ -1,11 +1,16 @@
 from automation_infra.support_utils import FileUtil as f, JsonDictUtil as json_util
 
 
-def get_statistic(unique_statistics_name):
+def get_fail_statistic(unique_statistics_name):
     # locust_data = LocustStatistic(**data)
     # requests_failures_data = RequestStatistic(**locust_data.requests, **locust_data.failures)
     # request_failure_data = RequestStatistic(**requests_failures_data.executed_requests, **requests_failures_data.fail_requests)
-    return f.parseCsvToObjectList(FailStatistics, f"locust_statistic/{unique_statistics_name}_failures.csv")
+    return f.parseCsvToObjectList(FailStatistics,
+                                  f"locust_files/locust_statistic/{unique_statistics_name}_failures.csv")
+
+
+def get_test_statistic(unique_statistics_name):
+    return f.parseCsvToObjectList(TestStatistics, f"locust_files/locust_statistic/{unique_statistics_name}_stats.csv")
 
 
 class LocustStatistic:

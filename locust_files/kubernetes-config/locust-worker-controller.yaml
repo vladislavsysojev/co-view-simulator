@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: locust-worker
+  name: locust-worker
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: locust-worker
+  template:
+    metadata:
+      labels:
+        app: locust-worker
+    spec:
+      containers:
+      - env:
+        - name: LOCUST_MODE
+          value: worker
+        - name: LOCUST_MASTER
+          value: locust-master
+        - name: TARGET_HOST
+          value: https://coview-automation.texel.live
+        image: gcr.io/charged-mind-247422/loadtest:latest
+        name: locust-worker
