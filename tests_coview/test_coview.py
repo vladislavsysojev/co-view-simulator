@@ -19,7 +19,7 @@ class TestCoViewSuite:
         print("prep")
 
     @allure.title("Device group component test")
-    @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(10, 120, 1, "170s")])
+    @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(100, 10000, 85, "5m")])
     def test_create_device_group(self, workers_num, user_num, spawn_rate, time_to_run):
         print("test1")
         # runCmd("cd /Users/vladislavsysojev/Documents/Texel/Git/co-view-simulator/automation_infra/firebase_client"
