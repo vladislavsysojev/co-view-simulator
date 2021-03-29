@@ -1,12 +1,13 @@
 import json
 import random
+import uuid
 
 from locust import task, TaskSet, constant, HttpUser
 
 
 # from automation_infra.requests_api.rest_api_request_data import login_data, create_device_id
 
-class CreateRoom(TaskSet):
+class CreteRoomUser(TaskSet):
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -14,19 +15,18 @@ class CreateRoom(TaskSet):
         # self.create_device_id = RequestData().create_device_id
 
     def on_start(self):
-        user_id = "23d23ff32" + str(random.randint(1, 100000))
-        device_id = "h783hd" + str(random.randint(1, 100000))
+        user_id = str(uuid.uuid4())
+        device_id = str(uuid.uuid4())
         create_room_data = {
             "creator": {
-                "id": "{0}"
+                "id": ""
             },
             "initialState": "PLAY",
             "initialPosition": 0,
             "content": {
                 "id": "1111",
                 "playbackUrls": [
-                    "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.mpd",
-                    "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.m3u8"
+                    "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.m3u8",
                 ]
             },
             "roomInformation": {
@@ -56,16 +56,18 @@ class CreateRoom(TaskSet):
         self.response = self.client.post("/v1/users/connect", name="Connect",
                                          headers={"Content-Type": "application/json"},
                                          json=login_data)
-        self.response = self.client.post("/v1/rooms", name="Create room host web app",
-                                    headers={"Content-Type": "application/json"},
-                                    json=json.loads(str.format(json.dumps(create_room_data), user_id)))
+        if self.response.status_code == 200:
+            create_room_data["creator"]["id"] = user_id
+            self.response = self.client.post("/v1/rooms", name="Create room host web app",
+                                             headers={"Content-Type": "application/json"},
+                                             json=create_room_data)
 
     @task
     def keep_alive(self):
         pass
 
 
-class CreteRoomUser(HttpUser):
-    tasks = [CreateRoom]
+class CreateRoom(HttpUser):
+    tasks = [CreteRoomUser]
     wait_time = constant(1)
     weight = 1
