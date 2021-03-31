@@ -4,12 +4,17 @@ import subprocess
 
 import re
 import time
+# import StringIO
+
 from multiprocessing import Pool
 from gevent.lock import RLock
 from functools import partial
 
+from automation_infra.automation_log_config.automation_log import ILog
+
 lock = RLock()
 iterator = 0
+log = ILog("Support Utils")
 
 
 def createUnigueName(name):
@@ -34,7 +39,8 @@ def parseTime(time):
 
 def runCmd(cmd):
     process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    # output, error = process.communicate()
+    # log.debug(StringIO(output))
     sel = selectors.DefaultSelector()
     sel.register(process.stdout, selectors.EVENT_READ)
     sel.register(process.stderr, selectors.EVENT_READ)
@@ -45,10 +51,12 @@ def runCmd(cmd):
                 # exit()
                 return
             if key.fileobj is process.stdout:
-                print(data, end="")
+                log.debug("\n" + data)
+                # print(data, end="")
             else:
                 # print(data, end="", file=sys.stderr)
-                print(data, end="")
+                log.debug("\n" + data)
+                # print(data, end="")
 
 
 def runMultipleCmdsAsync(cmds):

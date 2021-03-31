@@ -1,3 +1,4 @@
+import multiprocessing
 import time
 
 import allure
@@ -17,14 +18,12 @@ yaml.Dumper.ignore_aliases = lambda *args: True
 from automation_infra.support_utils import SupportUtils as sup
 from locust.env import Environment
 import gevent
-import multiprocessing
+from locust_files.infra import locust_constants as const
 
 from automation_infra.support_utils import FileUtil as f
 
 
 class LocustRunner:
-    # def __init__(self):
-    #     self.unique_statistics_name = sup.createUnigueName("locust_results")
 
     def invoker_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
         self.unique_statistics_name = sup.createUnigueName("locust_results")
@@ -34,7 +33,6 @@ class LocustRunner:
             num_users=num_of_users,
             spawn_rate=spawn_rate,
             run_time=run_time
-            # loglevel="DEBUG"
         )
         load_test = invokust.LocustLoadTest(settings)
         load_test.run()
@@ -43,9 +41,8 @@ class LocustRunner:
     def cmd_run(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
         self.unique_statistics_name = sup.createUnigueName("locust_results")
         try:
-            sup.runCmd(
-                f"locust -f {locust_file} --csv=locust_files/locust_statistic/{self.unique_statistics_name} --headless --host {host}"
-                f" -u {num_of_users} -r {spawn_rate} --run-time {run_time} --stop-time {stop_time}")
+            sup.runCmd(str.format(const.locust_run_command, locust_file, self.unique_statistics_name, host, num_of_users,
+                                  spawn_rate, run_time, stop_time, const.locust_statistics_local_run_path))
         except Exception as e:
             print(e)
             pass
@@ -54,11 +51,10 @@ class LocustRunner:
     def cmd_run_distributed_mode_locally(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
         self.unique_statistics_name = sup.createUnigueName("locust_results")
         num_of_workers = multiprocessing.cpu_count() - 1
-        cmd = f"locust -f {locust_file} --csv=locust_files/locust_statistic/{self.unique_statistics_name} --master --headless " \
-              f"--expect-workers={num_of_workers} --host {host} -u {num_of_users} -r {spawn_rate} --run" \
-              f"-time {run_time} --stop-time {stop_time} "
+        cmd = str.format(const.locust_master_command, locust_file, self.unique_statistics_name, num_of_workers, host,
+                         num_of_users, spawn_rate, run_time, stop_time, const.locust_statistics_local_run_path)
         for cpu_num in range(num_of_workers):
-            cmd += f";locust -f {locust_file} --worker"
+            cmd += str.format(";" + const.locust_worker_command, locust_file)
         try:
             sup.runMultipleCmdsAsync(cmd)
         except Exception as e:
@@ -72,100 +68,66 @@ class LocustRunner:
         env.create_local_runner()
         env.runner.start(num_of_users, spawn_rate=spawn_rate)
         env.host = host
-        # env.stop_timeout = "1m"
         gevent.spawn_later(run_time, lambda: env.runner.quit())
         result = env.runner.greenlet.join()
         print(result)
 
-    docker_services = {
-        "version": "3",
-        "services": {}}
-    docker_worker = {'container_name': 'Distributed-Worker', 'image': 'locustio/locust',
-                     'depends_on': ['master-distributed'], 'volumes': ['./:/mnt/locust'],
-                     'command': '-f /mnt/locust/{0} --worker --master-host master-distributed'}
-    docker_master = {'container_name': 'Distributed-Master', 'image': 'locustio/locust', 'ports': ['8089:8089'],
-                     'volumes': ['./:/mnt/locust'],
-                     'command': '-f /mnt/locust/{0} --csv=/mnt/locust/locust_files/locust_statistic/{6} --master '
-                                '--expect-workers={1} --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99'}
-
     @allure.step("Run locust distributed mode with docker locally")
     def run_with_docker(self, locust_file_path, worker_num, host, user_num, spawn_rate, run_time):
         self.unique_statistics_name = sup.createUnigueName("locust_results")
-        # yml_path = f.getFullPath("locust_files/docker-compose.yml")
-        # with open(yml_path) as file:
-        #     # The FullLoader parameter handles the conversion from YAML
-        #     # scalar values to Python the dictionary format
-        #     docker_compose_list = yaml.load(file, Loader=yaml.FullLoader)
-        self.docker_master["command"] = str.format(self.docker_master["command"], locust_file_path, worker_num, host,
-                                                   user_num, spawn_rate, run_time, self.unique_statistics_name)
-        self.docker_worker["command"] = str.format(self.docker_worker["command"], locust_file_path)
-        self.docker_services["services"]["master-distributed"] = self.docker_master
+        docker_master = const.docker_master.copy()
+        docker_worker = const.docker_worker.copy()
+        docker_services = const.docker_services.copy()
+        docker_master["command"] = str.format(docker_master["command"], locust_file_path, worker_num, host,
+                                              user_num, spawn_rate, run_time, self.unique_statistics_name,
+                                              const.locust_statistics_local_run_path)
+        docker_worker["command"] = str.format(docker_worker["command"], locust_file_path)
+        docker_services["services"]["master-distributed"] = docker_master
         for num_of_workers in range(worker_num):
-            dict_helper = self.docker_worker.copy()
+            dict_helper = docker_worker.copy()
             dict_helper.update({"container_name": "Distributed-Worker" + str(num_of_workers)})
             dict_helper["container_name"] = dict_helper["container_name"] + str(num_of_workers)
-            self.docker_services["services"]["worker-distributed" + str(num_of_workers)] = dict_helper
-
-        dict_file = [self.docker_master, self.docker_worker]
-        # f.createLocalFileOrDir("locust_files/docker-compose.yml")
+            docker_services["services"]["worker-distributed" + str(num_of_workers)] = dict_helper
         yml_path = f.getFullPath("")
-        with open(yml_path + "docker-compose.yml", 'w') as file:
-            documents = yaml.dump(self.docker_services, file)
-        sup.runCmd(f"cd {yml_path};docker-compose up")
+        f.create_yml_file(yml_path + const.docker_compose_file, docker_services)
+        sup.runCmd(f"cd {yml_path};{const.docker_compose_up_cmd}")
 
     @allure.step("Run locust distributed mode on GCP cloud")
     def run_distributed_mode_on_gcp(self, host, expected_workers_num, num_of_users, spawn_rate, run_time,
                                     locust_file_to_run):
         self.unique_statistics_name = sup.createUnigueName("locust_results")
-        kub_config_path = str.format("{}/locust_files/kubernetes-config/", f.getFullPath(""))
-        f.replace_master_yaml_value(str.format("{0}/locust-master-controller.yaml", kub_config_path), host)
-        f.replace_worker_yaml_value(str.format("{0}/locust-worker-controller.yaml", kub_config_path), host,
-                                    expected_workers_num)
-        locust_files_path = str.format("{}/locust_files", f.getFullPath(""))
-        docker_image_path = str.format("{}/locust_files/docker-image", f.getFullPath(""))
-        locust_tasks_path = str.format("{}/locust_files/docker-image/locust-tasks", f.getFullPath(""))
-        run_sh_text = str.format('''#!/bin/bash\nLOCUST="/usr/local/bin/locust" \nLOCUS_OPTS="-f {0}" \nsleep 30 
-        \nLOCUST_MODE=${{LOCUST_MODE:-standalone}} \n \nif [[ "$LOCUST_MODE" = "master" ]]; then \nls -ltrh /locust_statistic 
-        \nrm -rf /locust_statistic/* \nLOCUS_OPTS="$LOCUS_OPTS --csv=/locust_statistic/ --master --expect-workers={1} 
-        --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99" \nelif [[ "$LOCUST_MODE" = "worker" ]]; then 
-        \n LOCUS_OPTS="$LOCUS_OPTS --worker --master-host=$LOCUST_MASTER" \nfi \necho "$LOCUST $LOCUS_OPTS" \n 
-        \n$LOCUST $LOCUS_OPTS \nchmod +x /locust_statistic \nchmod +x /locust_statistic/*\nsleep 30
-        \nchmod +x /locust-tasks/rename.sh;mv /locust-tasks/rename.sh /locust_statistic/;cd /locust_statistic/;./rename.sh
-        \nls -ltrh /locust_statistic/*''',
-                                 locust_file_to_run, expected_workers_num, host, num_of_users,
-                                 spawn_rate, run_time)
-        rename_sh_script = str.format("""rename_name_path='{0}' \nfor f in *.csv \ndo\n       mv "$f" "$rename_name_path$f"\ndone""", self.unique_statistics_name)
-        file = open(str.format("{0}/run.sh", locust_tasks_path), "w")
-        file.write(run_sh_text)
-        file.close()
-        file = open(str.format("{0}/rename.sh", locust_tasks_path), "w")
-        file.write(rename_sh_script)
-        file.close()
-        master_pod = ""
+        f.replace_master_yaml_value(const.master_deployment_file_path, host)
+        f.replace_worker_yaml_value(const.worker_deployment_file_path, host, expected_workers_num)
+        docker_file_text = str.format(const.docker_file_text, locust_file_to_run, const.locust_templates,
+                                      const.locust_files_dir, const.locust_tasks_dir, const.docker_image_dir)
+        run_sh_text = str.format(const.run_sh_text, const.locust_statistic_dir,
+                                 expected_workers_num, host, num_of_users, spawn_rate, run_time, locust_file_to_run)
+        rename_sh_script = str.format(const.rename_sh_script, self.unique_statistics_name)
+        f.create_text_file(const.run_sh_path, run_sh_text)
+        f.create_text_file(const.rename_sh_path, rename_sh_script)
+        f.create_text_file(const.docker_file_path, docker_file_text)
+        f.create_text_file(const.requirements_txt_path, const.requirments_text)
+        master_pod = ''
         try:
-            sup.runCmd(
-                "gcloud container clusters get-credentials texel-load-tests-cluster --zone europe-west2-a --project charged-mind-247422")
-            sup.runCmd(
-                f"cd {locust_files_path};gcloud builds submit --tag gcr.io/charged-mind-247422/loadtest:latest .")
-            # kub_sup.create_deployment(kub_config_path, "locust-master-controller.yaml")
-            # kub_sup.create_deployment(kub_config_path, "locust-worker-controller.yaml")
-            sup.runCmd(str.format("kubectl apply -f {0}locust-master-controller.yaml", kub_config_path))
-            sup.runCmd(str.format("kubectl apply -f {0}locust-worker-controller.yaml", kub_config_path))
+            sup.runCmd(const.load_test_cluster_connection_str)
+            sup.runCmd(f"cd {const.locust_files_path};{const.push_image_cmd}")
+            sup.runCmd(const.create_master_pod_cmd)
+            sup.runCmd(const.create_worker_pod_cmd)
             pods = kub_sup.getRunningKubernetesPods(1, 180)
             for pod_name in pods:
                 if "master" in pod_name:
                     master_pod = pod_name
                     break
-            sup.runCmd(str.format("kubectl logs -f {0}", master_pod))
+            sup.runCmd(str.format(const.get_kubectl_logs, master_pod))
         except Exception as e:
             raise Exception(str.format("Fail to run load test on GCP cloud cause of error: {0}"), e)
         finally:
-            sup.runCmd(f"kubectl delete pods {master_pod} --grace-period=0 --force")
-            sup.runCmd("kubectl delete deployment locust-master")
-            sup.runCmd("kubectl delete deployment locust-worker")
-            sup.runCmd(f"kubectl apply -f {kub_config_path}locust-persistency.yaml")
+            sup.runCmd(str.format(const.delete_pod_cmd_force, master_pod))
+            sup.runCmd(const.delete_master_deployment_cmd)
+            sup.runCmd(const.delete_worker_deployment_cmd)
+            sup.runCmd(str.format(const.create_pod_cmd, const.persistence_file_path))
             kub_sup.getRunningKubernetesPods(1, 60)
             time.sleep(5)
-            sup.runCmd(str.format("kubectl cp dataaccess:/locust_statistic {0}/locust_statistic/ ", locust_files_path))
-            sup.runCmd("kubectl delete pod dataaccess")
+            sup.runCmd(const.copy_locust_statistics_cmd)
+            sup.runCmd(str.format(const.delete_pod_cmd, const.persistence_pod_name))
             print("exit")

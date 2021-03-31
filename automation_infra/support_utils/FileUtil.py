@@ -63,10 +63,19 @@ def replace_master_yaml_value(file_path, value):
 
 def replace_worker_yaml_value(file_path, host, expected_workers_num):
     with open(file_path) as file:
-        # The FullLoader parameter handles the conversion from YAML
-        # scalar values to Python the dictionary format
         yaml_list = yaml.load(file, Loader=yaml.FullLoader)
     yaml_list["spec"]["template"]["spec"]["containers"][0]["env"][2]["value"] = host
-    yaml_list["spec"]["replicas"] = expected_workers_num
+    yaml_list["spec"]["replicas"] = int(expected_workers_num)
     with open(file_path, 'w') as file:
         yaml.dump(yaml_list, file)
+
+
+def create_text_file(file_path, text):
+    file = open(file_path, "w")
+    file.write(text)
+    file.close()
+
+
+def create_yml_file(file_path, text):
+    with open(file_path, 'w') as file:
+        yaml.dump(text, file)

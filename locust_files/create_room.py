@@ -2,64 +2,39 @@ import json
 import random
 import uuid
 
-from locust import task, TaskSet, constant, HttpUser
-
+from locust import task, TaskSet, constant, HttpUser, events
+import locust_files.locust_templates as temp
 
 # from automation_infra.requests_api.rest_api_request_data import login_data, create_device_id
+
+# @events.test_start.add_listener
+# def on_test_start(environment, **kwargs):
+#     global room_content_ids
+#     room_content_ids = [str(uuid.uuid4()) for x in range(4)]
+#     print("A new test is starting")
 
 class CreteRoomUser(TaskSet):
 
     def __init__(self, parent):
         super().__init__(parent)
-        # self.login_data = RequestData().login_data
-        # self.create_device_id = RequestData().create_device_id
 
     def on_start(self):
         user_id = str(uuid.uuid4())
         device_id = str(uuid.uuid4())
-        create_room_data = {
-            "creator": {
-                "id": ""
-            },
-            "initialState": "PLAY",
-            "initialPosition": 0,
-            "content": {
-                "id": "1111",
-                "playbackUrls": [
-                    "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.m3u8",
-                ]
-            },
-            "roomInformation": {
-                "homeTeam": "FC Würzburger Kickers",
-                "homeTeamLogoUrl": "https://stg-zeus-telekomsport-de.laola1.at/images/editorial/Mataracan/Logos_neu/FWK200x200.png?time=1544545891822&h=150",
-                "awayTeam": "FC Bayern München II",
-                "awayTeamLogoUrl": "https://stg-zeus-telekomsport-de.laola1.at/images/editorial/Logos/Fussball/Bundesliga/01_fc_bayern_200x200.png?time=1562156010808&h=150",
-                "eventName": "FSV Zwickau - FC Ingolstadt",
-                "competitionName": "3. Liga Spieltag 15",
-                "scheduledStartTime": 1563623100000
-            }
-        }
-        login_data = {
-            "userId": user_id,
-            "device": {
-                "id": device_id,
-                "name": "TV APP",
-                "platform": "ANDROID",
-                "capabilities": {
-                    "MEDIA_SYNC": "READ"
-                }
-            },
-            "clientProtocols": [
-                "FIRESTORE"
-            ]
-        }
+        login_data = temp.login_data.copy()
+        login_data["userId"] = user_id
+        login_data["device"]["id"] = device_id
+        create_room_data = temp.create_room_data.copy()
+        create_room_data["creator"]["id"] = user_id
+        create_room_data["content"]["id"] = str(random.randint(1, 4))
         self.response = self.client.post("/v1/users/connect", name="Connect",
-                                         headers={"Content-Type": "application/json"},
-                                         json=login_data)
+                                         headers={"Content-Type": "application/json", "USER_ID": user_id,
+                                                  "DEVICE_ID": device_id}, json=login_data)
         if self.response.status_code == 200:
             create_room_data["creator"]["id"] = user_id
             self.response = self.client.post("/v1/rooms", name="Create room host web app",
-                                             headers={"Content-Type": "application/json"},
+                                             headers={"Content-Type": "application/json", "USER_ID": user_id,
+                                                      "DEVICE_ID": device_id},
                                              json=create_room_data)
 
     @task
