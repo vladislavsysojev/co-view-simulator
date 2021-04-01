@@ -19,8 +19,8 @@ HOSTNAME = os_getenv("HOSTNAME", "host")
 
 class ILog:
     def __init__(self, className=__name__):
-        f.cleanupDir("Logs/")
         f.createLocalFileOrDir("Logs/")
+        f.cleanupDir("Logs/")
         f.createLocalFileOrDir("Logs/info_crit_war_err")
         f.createLocalFileOrDir("Logs/info_debug")
         self.logger = logging.getLogger(className)

@@ -109,6 +109,7 @@ class LocustRunner:
         f.create_text_file(const.requirements_txt_path, const.requirments_text)
         master_pod = ''
         try:
+            sup.runCmd(const.gcloud_set_project_cmd)
             sup.runCmd(const.load_test_cluster_connection_str)
             sup.runCmd(f"cd {const.locust_files_path};{const.push_image_cmd}")
             sup.runCmd(const.create_master_pod_cmd)
@@ -122,7 +123,7 @@ class LocustRunner:
         except Exception as e:
             raise Exception(str.format("Fail to run load test on GCP cloud cause of error: {0}"), e)
         finally:
-            sup.runCmd(str.format(const.delete_pod_cmd_force, master_pod))
+            # sup.runCmd(str.format(const.delete_pod_cmd_force, master_pod))
             sup.runCmd(const.delete_master_deployment_cmd)
             sup.runCmd(const.delete_worker_deployment_cmd)
             sup.runCmd(str.format(const.create_pod_cmd, const.persistence_file_path))

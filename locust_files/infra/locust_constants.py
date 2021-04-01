@@ -20,7 +20,7 @@ docker_file_text = '''FROM python:3.9.1\n# Add the licenses for third party soft
         \n# Start Locust using LOCUS_OPTS environment variable
         \nENTRYPOINT ["/{3}/run.sh"]'''
 
-run_sh_text = '''#!/bin/bash\nLOCUST="/usr/local/bin/locust" \nLOCUS_OPTS="-f {6}" \nsleep 30 
+run_sh_text = '''#!/bin/bash\nLOCUST="/usr/local/bin/locust" \nLOCUS_OPTS="-f {6}" \nsleep 60 
         \nLOCUST_MODE=${{LOCUST_MODE:-standalone}} 
         \n \nif [[ "$LOCUST_MODE" = "master" ]]; then \nls -ltrh /{0} \nls
         \nrm -rf /{0}/* \nLOCUS_OPTS="$LOCUS_OPTS --csv=/{0}/ --master --expect-workers={1} 
@@ -66,7 +66,7 @@ docker_compose_file = "docker-compose.yml"
 
 master_deployment_file = "locust-master-controller.yaml"
 worker_deployment_file = "locust-worker-controller.yaml"
-
+gcloud_project_id = "charged-mind-247422"
 persistence_deployment_file = "locust-persistency.yaml"
 master_deployment_name = "locust-master"
 worker_deployment_name = "locust-worker"
@@ -120,8 +120,4 @@ locust_master_command = "locust -f {0} --csv={8}/{1} --master --headless --expec
 
 locust_worker_command = "locust -f {0} --worker"
 
-
-
-
-
-
+gcloud_set_project_cmd = str.format("gcloud config set project {0}", gcloud_project_id)

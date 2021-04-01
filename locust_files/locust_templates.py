@@ -89,3 +89,5 @@ register_channel_data = {
         }
     }
 }
+
+room_content_ids = []
