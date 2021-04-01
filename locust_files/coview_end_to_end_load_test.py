@@ -56,7 +56,7 @@ class CoViewEndToEnd(TaskSet):
 
     def host_tasks(self):
         room_id = ""
-        response = self.client.post("/v1/users/connect", name="Connect host",
+        response = self.client.post("/v1/users/connect", name="Connect host sdk",
                                     headers={"Content-Type": "application/json", "USER_ID": self.user_id,
                                              "DEVICE_ID": self.device_id},
                                     json=self.login_data)
@@ -74,7 +74,7 @@ class CoViewEndToEnd(TaskSet):
                                         , json=self.pin_data)
             if response.status_code == 200:
                 self.enter_pin_data["pin"] = json.loads(response.text)["pin"]
-                response = self.client.post("/v1/users/connect", name="Connect host",
+                response = self.client.post("/v1/users/connect", name="Connect host web app",
                                             headers={"Content-Type": "application/json", "USER_ID": self.user_id,
                                                      "DEVICE_ID": self.device_id}, json=self.login_data)
 
@@ -114,7 +114,7 @@ class CoViewEndToEnd(TaskSet):
 
     def participant_tasks(self, room_id, participant_num):
         if room_id:
-            response = self.client.post("/v1/users/connect", name="Connect participant " + str(participant_num),
+            response = self.client.post("/v1/users/connect", name="Connect participant " + str(participant_num) + " sdk",
                                         headers={"Content-Type": "application/json", "USER_ID": self.user_id,
                                                  "DEVICE_ID": self.device_id}, json=self.login_data)
             if response.status_code == 200:
@@ -131,7 +131,7 @@ class CoViewEndToEnd(TaskSet):
                                             json=self.pin_data)
                 if response.status_code == 200:
                     self.enter_pin_data["pin"] = json.loads(response.text)["pin"]
-                    response = self.client.post("/v1/users/connect", name="Connect participant " + str(participant_num),
+                    response = self.client.post("/v1/users/connect", name="Connect participant " + str(participant_num) + " web app",
                                                 headers={"Content-Type": "application/json", "USER_ID": self.user_id,
                                                          "DEVICE_ID": self.device_id}, json=self.login_data)
 
