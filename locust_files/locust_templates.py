@@ -76,7 +76,7 @@ attach_data = {
 join_room_data = {
     "userId": "",
     "deviceId": "",
-    "name": "Andrew"
+    "name": "Vlad"
 }
 
 register_channel_data = {
@@ -85,7 +85,7 @@ register_channel_data = {
     "channels": {
         "MEDIA_SYNC": {
             "mode": "READ",
-            "playbackUrl": "http://hfdsjkhf"
+            "playbackUrl": "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.m3u8"
         }
     }
 }
