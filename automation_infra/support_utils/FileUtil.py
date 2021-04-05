@@ -4,6 +4,10 @@ import shutil
 
 import yaml
 
+from automation_infra.automation_log_config.automation_log import ILog
+
+log = ILog("File Util")
+
 
 def getFullPath(folder):
     currentDirectory = os.getcwd()
@@ -20,7 +24,7 @@ def cleanupFilesFromLocalDir(folder):
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
         except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+            log.info('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
 def createLocalFileOrDir(name):
@@ -38,7 +42,7 @@ def cleanupDir(path):
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
         except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+            log.info('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
 def parseCsvToObjectList(any_class, csv_file):
@@ -79,3 +83,8 @@ def create_text_file(file_path, text):
 def create_yml_file(file_path, text):
     with open(file_path, 'w') as file:
         yaml.dump(text, file)
+
+
+def read_file_to_object_list(file_path):
+    file = open(file_path, "r+")
+    return file.read().split("\n")

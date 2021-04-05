@@ -13,6 +13,15 @@ def get_test_statistic(unique_statistics_name):
     return f.parseCsvToObjectList(TestStatistics, f"locust_files/locust_statistic/{unique_statistics_name}_stats.csv")
 
 
+def get_test_exceptions(unique_statistics_name):
+    return f.parseCsvToObjectList(TestStatistics,
+                                  f"locust_files/locust_statistic/{unique_statistics_name}_exceptions.csv")
+
+
+def get_log_results(unique_log_name):
+    return f.read_file_to_object_list(f"locust_files/locust_statistic/{unique_log_name}.log")
+
+
 class LocustStatistic:
     def __init__(self, requests, failures):
         self.requests = requests

@@ -10,6 +10,10 @@ def general_prep(request):
     print("general setup")
     f.createLocalFileOrDir("locust_files/locust_statistic")
     f.cleanupDir("locust_files/locust_statistic")
+    f.createLocalFileOrDir("Logs/")
+    f.cleanupDir("Logs/")
+    f.createLocalFileOrDir("Logs/info_crit_war_err")
+    f.createLocalFileOrDir("Logs/info_debug")
     rep.createReportsDir()
     rep.cleanUpReportFiles()
 

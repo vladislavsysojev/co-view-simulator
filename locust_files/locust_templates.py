@@ -90,4 +90,9 @@ register_channel_data = {
     }
 }
 
+leave_room_data = {
+     "deviceId": "",
+     "userId": ""
+}
+
 room_content_ids = []

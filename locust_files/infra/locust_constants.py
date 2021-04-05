@@ -23,7 +23,7 @@ docker_file_text = '''FROM python:3.9.1\n# Add the licenses for third party soft
 run_sh_text = '''#!/bin/bash\nLOCUST="/usr/local/bin/locust" \nLOCUS_OPTS="-f {6}" \nsleep 60 
         \nLOCUST_MODE=${{LOCUST_MODE:-standalone}} 
         \n \nif [[ "$LOCUST_MODE" = "master" ]]; then \nls -ltrh /{0} \nls
-        \nrm -rf /{0}/* \nLOCUS_OPTS="$LOCUS_OPTS --csv=/{0}/ --master --expect-workers={1} 
+        \nrm -rf /{0}/* \nLOCUS_OPTS="$LOCUS_OPTS --csv=/{0}/ --logfile=/{0}/{7}.log --master --expect-workers={1} 
         --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99" \nelif [[ "$LOCUST_MODE" = "worker" ]]; then 
         \n LOCUS_OPTS="$LOCUS_OPTS --worker --master-host=$LOCUST_MASTER" \nfi \necho "$LOCUST $LOCUS_OPTS" \n 
         \n$LOCUST $LOCUS_OPTS \nchmod +x /{0} \nchmod +x /{0}/*\nsleep 30 \nls -ltrh /{0}/*

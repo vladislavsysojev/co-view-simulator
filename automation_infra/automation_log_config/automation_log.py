@@ -19,10 +19,7 @@ HOSTNAME = os_getenv("HOSTNAME", "host")
 
 class ILog:
     def __init__(self, className=__name__):
-        f.createLocalFileOrDir("Logs/")
-        f.cleanupDir("Logs/")
-        f.createLocalFileOrDir("Logs/info_crit_war_err")
-        f.createLocalFileOrDir("Logs/info_debug")
+
         self.logger = logging.getLogger(className)
         self.logger.setLevel(logging.DEBUG)
         date_time = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")

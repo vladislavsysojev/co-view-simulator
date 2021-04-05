@@ -5,7 +5,7 @@ metadata:
     name: locust-worker
   name: locust-worker
 spec:
-  replicas: 10
+  replicas: 50
   selector:
     matchLabels:
       app: locust-worker
@@ -24,3 +24,9 @@ spec:
           value: https://coview-automation.texel.live
         image: gcr.io/charged-mind-247422/loadtest:latest
         name: locust-worker
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 1000m

@@ -13,14 +13,17 @@ from functools import partial
 from automation_infra.automation_log_config.automation_log import ILog
 
 lock = RLock()
-iterator = 0
+iterator = 1
 log = ILog("Support Utils")
-
+names_diff = []
 
 def createUnigueName(name):
     with lock:
-        global iterator
-        iterator += 1
+        if name not in names_diff:
+            names_diff.append(name)
+        else:
+            global iterator
+            iterator += 1
         return str.format("{0}{1}", name, iterator)
 
 
