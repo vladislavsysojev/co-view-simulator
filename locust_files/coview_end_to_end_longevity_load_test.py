@@ -38,17 +38,18 @@ class CoViewEndToEndLongevity(TaskSet):
 
     def on_start(self):
         self.create_requests_data()
-        self.room_id = self.host_tasks()
+        room_id = self.host_tasks()
         for participant in range(3):
             self.create_requests_data()
             time.sleep(1)
-            self.participant_tasks(self.room_id, participant)
+            self.participant_tasks(room_id, participant)
+        self.leave_room(room_id)
 
-    def on_stop(self):
+    def leave_room(self, room_id):
         participant_counter = 0
         is_host = True
-        if self.room_id:
-            for user, device in self.users_dict:
+        if room_id:
+            for user, device in self.users_dict.items():
                 self.leave_room_data["userId"] = user
                 self.leave_room_data["deviceId"] = device
                 if is_host:
@@ -57,7 +58,7 @@ class CoViewEndToEndLongevity(TaskSet):
                 else:
                     name = f"Leave room participant {str(participant_counter)} web app"
                     participant_counter += 1
-                response = self.client.post(f"/v1/rooms/{self.room_id}/leave", name=name,
+                response = self.client.post(f"/v1/rooms/{room_id}/leave", name=name,
                                             headers={"Content-Type": "application/json", "USER_ID": user,
                                                      "DEVICE_ID": device}, json=self.leave_room_data)
 
