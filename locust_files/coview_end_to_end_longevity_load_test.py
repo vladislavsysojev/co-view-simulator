@@ -34,6 +34,7 @@ class CoViewEndToEndLongevity(TaskSet):
         self.login_data_web_app = copy.deepcopy(temp.login_data)
         self.pin_data = copy.deepcopy(temp.pin_data)
         self.leave_room_data = copy.deepcopy(temp.leave_room_data)
+        self.access_token_data = copy.deepcopy(temp.access_token_data)
         self.users_dict = {}
 
     def on_start(self):
@@ -80,116 +81,153 @@ class CoViewEndToEndLongevity(TaskSet):
         self.join_room_data["deviceId"] = self.device_id_web_app
         self.register_channel_data["userId"] = self.user_id
         self.register_channel_data["deviceId"] = self.device_id_web_app
+        self.access_token_data["userId"] = self.user_id
 
     def host_tasks(self):
         room_id = ""
-        response = self.client.post("/v1/users/connect", name="Connect host sdk",
-                                    headers={"Content-Type": "application/json", "USER_ID": self.user_id,
-                                             "DEVICE_ID": self.device_id_sdk},
-                                    json=self.login_data_sdk)
+        response = self.client.post("/v1/auth/generateEngagementToken", name="Generate access token host",
+                                    headers={"Content-Type": "application/json", "USER_ID": self.user_id},
+                                    json=self.access_token_data)
         if response.status_code == 200:
-            response = self.client.post(f"/v1/users/{self.user_id}/deviceGroups",
-                                        name="Create device group host sdk",
-                                        headers={"Content-Type": "application/json", "USER_ID": self.user_id,
-                                                 "DEVICE_ID": self.device_id_sdk}, json=self.create_device_id)
-            device_group_id = ""
-            if response.status_code == 200:
-                device_group_id = json.loads(response.text)["deviceGroupId"]
-
-            response = self.client.post("/v1/pin", name="Generate pin host sdk",
-                                        headers={"Content-Type": "application/json", "USER_ID": self.user_id}
-                                        , json=self.pin_data)
-            if response.status_code == 200:
-                self.enter_pin_data["pin"] = json.loads(response.text)["pin"]
-                response = self.client.post("/v1/users/connect", name="Connect host web app",
-                                            headers={"Content-Type": "application/json", "USER_ID": self.user_id,
-                                                     "DEVICE_ID": self.device_id_web_app}, json=self.login_data_web_app)
-
-                if response.status_code == 200:
-                    response = self.client.put("/v1/pin", name=f"Enter pin host web app",
-                                               headers={"Content-Type": "application/json"},
-                                               data=json.dumps(self.enter_pin_data))
-                    if device_group_id:
-                        response = self.client.post(f"/v1/users/{self.user_id}/deviceGroups/{device_group_id}/attach",
-                                                    name="Attach host web app",
-                                                    headers={"Content-Type": "application/json",
-                                                             "DEVICE_ID": self.device_id_web_app},
-                                                    json=self.attach_data)
-
-                    response = self.client.post("/v1/rooms", name="Create room host web app",
-                                                headers={"Content-Type": "application/json", "USER_ID": self.user_id,
-                                                         "DEVICE_ID": self.device_id_web_app},
-                                                json=self.create_room_data)
-
-                    if response.status_code == 200:
-                        room_id = json.loads(response.text)["roomId"]
-                        response = self.client.post(f"/v1/rooms/{room_id}/join", name="Join room host web app",
-                                                    headers={"Content-Type": "application/json",
-                                                             "USER_ID": self.user_id,
-                                                             "DEVICE_ID": self.device_id_web_app, "ROOM_ID": room_id},
-                                                    json=self.join_room_data)
-
-                        if response.status_code == 200:
-                            response = self.client.post(f"/v1/rooms/{room_id}/channels",
-                                                        name="Register channel host web app",
-                                                        headers={"Content-Type": "application/json",
-                                                                 "USER_ID": self.user_id,
-                                                                 "DEVICE_ID": self.device_id_web_app},
-                                                        json=self.register_channel_data)
-
-        return room_id
-
-    def participant_tasks(self, room_id, participant_num):
-        if room_id:
-            response = self.client.post("/v1/users/connect",
-                                        name="Connect participant " + str(participant_num) + " sdk",
-                                        headers={"Content-Type": "application/json", "USER_ID": self.user_id,
-                                                 "DEVICE_ID": self.device_id_sdk}, json=self.login_data_sdk)
+            access_token = json.loads(response.text)["auth"]["accessToken"]
+            response = self.client.post("/v1/users/connect", name="Connect host sdk",
+                                        headers={"Content-Type": "application/json",
+                                                 "Authorization": access_token, "USER_ID": self.user_id,
+                                                 "DEVICE_ID": self.device_id_sdk},
+                                        json=self.login_data_sdk)
             if response.status_code == 200:
                 response = self.client.post(f"/v1/users/{self.user_id}/deviceGroups",
-                                            name="Create device group participant sdk " + str(participant_num),
-                                            headers={"Content-Type": "application/json", "USER_ID": self.user_id,
+                                            name="Create device group host sdk",
+                                            headers={"Content-Type": "application/json",
+                                                     "Authorization": access_token, "USER_ID": self.user_id,
                                                      "DEVICE_ID": self.device_id_sdk}, json=self.create_device_id)
                 device_group_id = ""
                 if response.status_code == 200:
                     device_group_id = json.loads(response.text)["deviceGroupId"]
 
-                response = self.client.post("/v1/pin", name="Generate pin participant sdk " + str(participant_num),
-                                            headers={"Content-Type": "application/json", "USER_ID": self.user_id},
-                                            json=self.pin_data)
+                response = self.client.post("/v1/pin", name="Generate pin host sdk",
+                                            headers={"Content-Type": "application/json",
+                                                     "Authorization": access_token, "USER_ID": self.user_id}
+                                            , json=self.pin_data)
+                time.sleep(random.randint(1, 3))
                 if response.status_code == 200:
                     self.enter_pin_data["pin"] = json.loads(response.text)["pin"]
-                    response = self.client.post("/v1/users/connect",
-                                                name="Connect participant " + str(participant_num) + " web app",
-                                                headers={"Content-Type": "application/json", "USER_ID": self.user_id,
+                    response = self.client.post("/v1/users/connect", name="Connect host web app",
+                                                headers={"Content-Type": "application/json",
+                                                         "Authorization": access_token,
+                                                         "USER_ID": self.user_id,
                                                          "DEVICE_ID": self.device_id_web_app},
                                                 json=self.login_data_web_app)
 
                     if response.status_code == 200:
-                        response = self.client.put("/v1/pin",
-                                                   name=f"Enter pin participant web app" + str(participant_num),
-                                                   headers={"Content-Type": "application/json"},
+                        response = self.client.put("/v1/pin", name=f"Enter pin host web app",
+                                                   headers={"Content-Type": "application/json",
+                                                            "Authorization": access_token},
                                                    data=json.dumps(self.enter_pin_data))
                         if device_group_id:
                             response = self.client.post(
                                 f"/v1/users/{self.user_id}/deviceGroups/{device_group_id}/attach",
-                                name="Attach participant web app" + str(participant_num),
-                                headers={"Content-Type": "application/json",
-                                         "DEVICE_ID": self.device_id_web_app}, json=self.attach_data)
+                                name="Attach host web app",
+                                headers={"Content-Type": "application/json", "Authorization": access_token,
+                                         "DEVICE_ID": self.device_id_web_app},
+                                json=self.attach_data)
 
-                            response = self.client.post(f"/v1/rooms/{room_id}/join",
-                                                        name="Join room participant web app " + str(participant_num),
+                        response = self.client.post("/v1/rooms", name="Create room host web app",
+                                                    headers={"Content-Type": "application/json",
+                                                             "Authorization": access_token,
+                                                             "USER_ID": self.user_id,
+                                                             "DEVICE_ID": self.device_id_web_app},
+                                                    json=self.create_room_data)
+
+                        if response.status_code == 200:
+                            room_id = json.loads(response.text)["roomId"]
+                            response = self.client.post(f"/v1/rooms/{room_id}/join", name="Join room host web app",
                                                         headers={"Content-Type": "application/json",
                                                                  "USER_ID": self.user_id,
+                                                                 "Authorization": access_token,
                                                                  "DEVICE_ID": self.device_id_web_app,
                                                                  "ROOM_ID": room_id},
                                                         json=self.join_room_data)
+
                             if response.status_code == 200:
-                                self.client.post(f"/v1/rooms/{room_id}/channels",
-                                                 name="Register channel participant web app" + str(participant_num),
-                                                 headers={"Content-Type": "application/json",
-                                                          "USER_ID": self.user_id, "DEVICE_ID": self.device_id_web_app},
-                                                 json=self.register_channel_data)
+                                response = self.client.post(f"/v1/rooms/{room_id}/channels",
+                                                            name="Register channel host web app",
+                                                            headers={"Content-Type": "application/json",
+                                                                     "USER_ID": self.user_id,
+                                                                     "Authorization": access_token,
+                                                                     "DEVICE_ID": self.device_id_web_app},
+                                                            json=self.register_channel_data)
+
+        return room_id
+
+    def participant_tasks(self, room_id, participant_num):
+        if room_id:
+            response = self.client.post("/v1/auth/generateEngagementToken",
+                                        name=f"Generate access token participant {str(participant_num)}",
+                                        headers={"Content-Type": "application/json", "USER_ID": self.user_id},
+                                        json=self.access_token_data)
+            if response.status_code == 200:
+                access_token = json.loads(response.text)["auth"]["accessToken"]
+                response = self.client.post("/v1/users/connect",
+                                            name="Connect participant " + str(participant_num) + " sdk",
+                                            headers={"Content-Type": "application/json", "USER_ID": self.user_id,
+                                                     "Authorization": access_token,
+                                                     "DEVICE_ID": self.device_id_sdk}, json=self.login_data_sdk)
+                if response.status_code == 200:
+                    response = self.client.post(f"/v1/users/{self.user_id}/deviceGroups",
+                                                name="Create device group participant sdk " + str(participant_num),
+                                                headers={"Content-Type": "application/json", "USER_ID": self.user_id,
+                                                         "Authorization": access_token,
+                                                         "DEVICE_ID": self.device_id_sdk}, json=self.create_device_id)
+                    device_group_id = ""
+                    if response.status_code == 200:
+                        device_group_id = json.loads(response.text)["deviceGroupId"]
+
+                    response = self.client.post("/v1/pin", name="Generate pin participant sdk " + str(participant_num),
+                                                headers={"Content-Type": "application/json", "USER_ID": self.user_id,
+                                                         "Authorization": access_token},
+                                                json=self.pin_data)
+                    if response.status_code == 200:
+                        self.enter_pin_data["pin"] = json.loads(response.text)["pin"]
+                        response = self.client.post("/v1/users/connect",
+                                                    name="Connect participant " + str(participant_num) + " web app",
+                                                    headers={"Content-Type": "application/json",
+                                                             "USER_ID": self.user_id,
+                                                             "Authorization": access_token,
+                                                             "DEVICE_ID": self.device_id_web_app},
+                                                    json=self.login_data_web_app)
+
+                        if response.status_code == 200:
+                            response = self.client.put("/v1/pin",
+                                                       name=f"Enter pin participant web app" + str(participant_num),
+                                                       headers={"Content-Type": "application/json",
+                                                                "Authorization": access_token},
+                                                       data=json.dumps(self.enter_pin_data))
+                            if device_group_id:
+                                response = self.client.post(
+                                    f"/v1/users/{self.user_id}/deviceGroups/{device_group_id}/attach",
+                                    name="Attach participant web app" + str(participant_num),
+                                    headers={"Content-Type": "application/json",
+                                             "Authorization": access_token,
+                                             "DEVICE_ID": self.device_id_web_app}, json=self.attach_data)
+
+                                response = self.client.post(f"/v1/rooms/{room_id}/join",
+                                                            name="Join room participant web app " + str(
+                                                                participant_num),
+                                                            headers={"Content-Type": "application/json",
+                                                                     "Authorization": access_token,
+                                                                     "USER_ID": self.user_id,
+                                                                     "DEVICE_ID": self.device_id_web_app,
+                                                                     "ROOM_ID": room_id},
+                                                            json=self.join_room_data)
+                                if response.status_code == 200:
+                                    self.client.post(f"/v1/rooms/{room_id}/channels",
+                                                     name="Register channel participant web app" + str(participant_num),
+                                                     headers={"Content-Type": "application/json",
+                                                              "Authorization": access_token,
+                                                              "USER_ID": self.user_id,
+                                                              "DEVICE_ID": self.device_id_web_app},
+                                                     json=self.register_channel_data)
 
     @task
     def keep_alive(self):

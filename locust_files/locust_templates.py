@@ -95,4 +95,9 @@ leave_room_data = {
      "userId": ""
 }
 
+access_token_data = {
+  "applicationKey": "some-uuid",
+  "userId": ""
+}
+
 room_content_ids = []
