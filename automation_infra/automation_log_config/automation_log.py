@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import datetime
 import logging
+import os
 from os import getenv as os_getenv
-from automation_infra.support_utils import FileUtil as f
 
 HOSTNAME = os_getenv("HOSTNAME", "host")
+
+
 # fmt_pattern = '{"time":"%(asctime)s.%(msecs)03dZ", ' \
 #               '"loglevel":"%(levelname)s", "hostname":"' \
 #               + HOSTNAME + '", "message":%(message)s}'
@@ -16,15 +18,26 @@ HOSTNAME = os_getenv("HOSTNAME", "host")
 # handler.setFormatter(formatter)
 # LOGGER = logging.getLogger("automation_logger")  # set the formatter to handler
 # LOGGER.addHandler(handler)
+date_time = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
+
+def create_log_dir(name):
+    full_path = os.path.join(os.getcwd(), name)
+    if not os.path.isdir(full_path):
+        os.mkdir(full_path)
+
 
 class ILog:
     def __init__(self, className=__name__):
-
+        create_log_dir("Logs/")
+        create_log_dir("Logs/")
+        create_log_dir("Logs/info_crit_war_err")
+        create_log_dir("Logs/info_debug")
         self.logger = logging.getLogger(className)
         self.logger.setLevel(logging.DEBUG)
-        date_time = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
-        # loging format
+
+        # logging format
         date_fmt_pattern = '%Y-%m-%dT%H:%M:%S'
         file_fmt = '%(asctime)s - %(name)s - %(funcName)s - %(levelname)s: %(message)s'
         con_fmt = '%(asctime)s %(message)s'
@@ -46,7 +59,7 @@ class ILog:
         con_formatter = logging.Formatter(con_fmt, datefmt=date_fmt_pattern)
         handler_console_info.setFormatter(con_formatter)
 
-        # handler addings
+        # handler adding
         self.logger.addHandler(handler_info)
         self.logger.addHandler(handler_console_info)
         self.logger.addHandler(handler_debug)
@@ -57,4 +70,3 @@ class ILog:
         self.debug = self.logger.debug
         self.error = self.logger.error
         self.exception = self.logger.exception
-

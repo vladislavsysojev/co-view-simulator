@@ -116,7 +116,7 @@ locust_run_command = "locust -f {0} --csv={7}/{1} --headless --host {2} -u {3} -
                      "--run-time {5} --stop-time {6} "
 
 locust_master_command = "locust -f {0} --csv={8}/{1} --master --headless --expect-workers={" \
-                        "2} --host {3} -u {4} -r {5} --run -time {6} --stop-time {7} "
+                        "2} --host {3} -u {4} -r {5} --run-time {6} --stop-time {7} "
 
 locust_worker_command = "locust -f {0} --worker"
 

@@ -15,8 +15,7 @@ from locust import events
 
 from locust import task, TaskSet, constant, HttpUser
 import locust_files.locust_templates as temp
-
-
+counter = 0
 # from automation_infra.requests_api import rest_api_request_data as req_data
 # from locust_files.infra.locust_infra import LocustTestUser
 
@@ -24,6 +23,7 @@ import locust_files.locust_templates as temp
 class CoViewEndToEnd(TaskSet):
     def __init__(self, parent):
         super().__init__(parent)
+        self.on_stop_executed = False
         self.register_channel_data = copy.deepcopy(temp.register_channel_data)
         self.join_room_data = copy.deepcopy(temp.join_room_data)
         self.create_room_data = copy.deepcopy(temp.create_room_data)
@@ -33,7 +33,10 @@ class CoViewEndToEnd(TaskSet):
         self.login_data_sdk = copy.deepcopy(temp.login_data)
         self.login_data_web_app = copy.deepcopy(temp.login_data)
         self.pin_data = copy.deepcopy(temp.pin_data)
+        self.leave_room_data = copy.deepcopy(temp.leave_room_data)
+        self.disconnect_data = copy.deepcopy(temp.disconnect_data)
         self.access_token_data = copy.deepcopy(temp.access_token_data)
+        self.users_dict = {}
 
     def on_start(self):
         self.create_requests_data()
@@ -42,6 +45,36 @@ class CoViewEndToEnd(TaskSet):
             self.create_requests_data()
             time.sleep(random.randint(5, 10))
             self.participant_tasks(room_id, participant)
+        time.sleep(300)
+        self.leave_room(room_id)
+
+    def leave_room(self, room_id):
+        participant_counter = 0
+        is_host = True
+        for user, device in self.users_dict.items():
+            self.leave_room_data["userId"] = user
+            self.leave_room_data["deviceId"] = device
+            self.disconnect_data["userId"] = user
+            self.disconnect_data["deviceId"] = device
+            if is_host:
+                is_host = False
+                name_leave = "Leave room host web app"
+                name_disconnect = "Disconnect user host web app"
+            else:
+                name_leave = f"Leave room participant {str(participant_counter)} web app"
+                name_disconnect = f"Disconnect user participant {str(participant_counter)} web app "
+                participant_counter += 1
+            if room_id:
+                response = self.client.post(f"/v1/rooms/{room_id}/leave", name=name_leave,
+                                            headers={"Content-Type": "application/json", "USER_ID": user,
+                                                     "DEVICE_ID": device}, json=self.leave_room_data)
+
+            response = self.client.post(f"/v1/users/disconnect", name=name_disconnect,
+                                        headers={"Content-Type": "application/json", "USER_ID": user,
+                                                 "DEVICE_ID": device}, json=self.disconnect_data)
+
+
+
 
     def create_requests_data(self):
         self.user_id = str(uuid.uuid4())
@@ -63,6 +96,8 @@ class CoViewEndToEnd(TaskSet):
         self.access_token_data["userId"] = self.user_id
 
     def host_tasks(self):
+        global counter
+        counter += 1
         room_id = ""
         response = self.client.post("/v1/auth/generateEngagementToken", name="Generate access token host",
                                     headers={"Content-Type": "application/json", "USER_ID": self.user_id},
@@ -214,6 +249,8 @@ class CoViewEndToEnd(TaskSet):
 
 
 class CoViewEndToEndUser(HttpUser):
+    # def on_stop(self):
+    #     self.leave_room(self, room_id)
     tasks = [CoViewEndToEnd]
     wait_time = constant(2)
     weight = 1

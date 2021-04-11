@@ -95,6 +95,12 @@ leave_room_data = {
      "userId": ""
 }
 
+disconnect_data = {
+  "userId": "",
+  "deviceId": ""
+}
+
+
 access_token_data = {
   "applicationKey": "some-uuid",
   "userId": ""

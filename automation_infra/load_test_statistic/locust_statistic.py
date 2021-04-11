@@ -1,25 +1,27 @@
-from automation_infra.support_utils import FileUtil as f, JsonDictUtil as json_util
+from automation_infra.support_utils import FileUtil as f
+from locust_files.infra import locust_constants as const
 
 
 def get_fail_statistic(unique_statistics_name):
-    # locust_data = LocustStatistic(**data)
-    # requests_failures_data = RequestStatistic(**locust_data.requests, **locust_data.failures)
-    # request_failure_data = RequestStatistic(**requests_failures_data.executed_requests, **requests_failures_data.fail_requests)
     return f.parseCsvToObjectList(FailStatistics,
-                                  f"locust_files/locust_statistic/{unique_statistics_name}_failures.csv")
+                                  f"{const.locust_files_dir}/{const.locust_statistic_dir}/"
+                                  f"{unique_statistics_name}_failures.csv")
 
 
 def get_test_statistic(unique_statistics_name):
-    return f.parseCsvToObjectList(TestStatistics, f"locust_files/locust_statistic/{unique_statistics_name}_stats.csv")
+    return f.parseCsvToObjectList(TestStatistics, f"{const.locust_files_dir}/{const.locust_statistic_dir}/"
+                                                  f"{unique_statistics_name}_stats.csv")
 
 
 def get_test_exceptions(unique_statistics_name):
     return f.parseCsvToObjectList(TestStatistics,
-                                  f"locust_files/locust_statistic/{unique_statistics_name}_exceptions.csv")
+                                  f"{const.locust_files_dir}/{const.locust_statistic_dir}/"
+                                  f"{unique_statistics_name}_exceptions.csv")
 
 
 def get_log_results(unique_log_name):
-    return f.read_file_to_object_list(f"locust_files/locust_statistic/{unique_log_name}.log")
+    return f.read_file_to_object_list(f"{const.locust_files_dir}/{const.locust_statistic_dir}/"
+                                      f"{unique_log_name}.log")
 
 
 class LocustStatistic:
@@ -75,5 +77,3 @@ class TestStatistics:
         self.percent_99_99 = percent_99_99
         self.percent_100 = percent_100
 
-
-import csv

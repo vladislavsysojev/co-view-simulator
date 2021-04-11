@@ -1,6 +1,7 @@
 import allure
 
 from automation_infra.load_test_statistic import locust_statistic as stat
+from locust_files.infra import locust_constants as const
 
 
 def validateLocustResults(unique_statistics_name, unique_log_name):
@@ -47,4 +48,5 @@ def attach_fail_log_results(result):
 
 
 def attachTestResults(file_name):
-    allure.attach.file(f'locust_files/locust_statistic/{file_name}', attachment_type=allure.attachment_type.CSV)
+    allure.attach.file(f'{const.locust_files_dir}/{const.locust_statistic_dir}/{file_name}',
+                       attachment_type=allure.attachment_type.CSV)
