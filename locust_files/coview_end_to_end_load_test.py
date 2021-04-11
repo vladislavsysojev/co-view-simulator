@@ -45,7 +45,7 @@ class CoViewEndToEnd(TaskSet):
             self.create_requests_data()
             time.sleep(random.randint(5, 10))
             self.participant_tasks(room_id, participant)
-        time.sleep(300)
+        time.sleep(120)
         self.leave_room(room_id)
 
     def leave_room(self, room_id):
