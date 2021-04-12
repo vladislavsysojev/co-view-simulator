@@ -14,10 +14,12 @@ class CreatePin(TaskSet):
 
     def on_start(self):
         user_id = str(uuid.uuid4())
+        device_id = str(uuid.uuid4())
         pin_data = temp.pin_data.copy()
         pin_data["payload"] = user_id
         access_token_data = copy.deepcopy(temp.access_token_data)
         access_token_data["userId"] = user_id
+        access_token_data["deviceId"] = device_id
         response = self.client.post("/v1/auth/generateEngagementToken", name="Generate access token",
                                     headers={"Content-Type": "application/json", "USER_ID": user_id},
                                     json=access_token_data)

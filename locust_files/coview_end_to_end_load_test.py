@@ -15,12 +15,16 @@ from locust import events
 
 from locust import task, TaskSet, constant, HttpUser
 import locust_files.locust_templates as temp
+time_list = []
 counter = 0
 # from automation_infra.requests_api import rest_api_request_data as req_data
 # from locust_files.infra.locust_infra import LocustTestUser
 
 
 class CoViewEndToEnd(TaskSet):
+    # def __init__(self, parent):
+    #     super().__init__(parent)
+
     def __init__(self, parent):
         super().__init__(parent)
         self.on_stop_executed = False
@@ -39,14 +43,27 @@ class CoViewEndToEnd(TaskSet):
         self.users_dict = {}
 
     def on_start(self):
+        self.queue_element = int(time.time())
+        time_list.append(self.queue_element)
         self.create_requests_data()
         room_id = self.host_tasks()
         for participant in range(3):
             self.create_requests_data()
             time.sleep(random.randint(5, 10))
             self.participant_tasks(room_id, participant)
-        time.sleep(120)
-        self.leave_room(room_id)
+        # time.sleep(120)
+        # self.leave_room(room_id)
+
+    def on_stop(self):
+        time_list_set = set(time_list)
+        while time_list:
+            if self.queue_element == time_list_set.pop():
+                print(str(self.queue_element))
+                time_list.remove(self.queue_element)
+                return
+            time.sleep(1)
+
+
 
     def leave_room(self, room_id):
         participant_counter = 0
@@ -94,6 +111,7 @@ class CoViewEndToEnd(TaskSet):
         self.register_channel_data["userId"] = self.user_id
         self.register_channel_data["deviceId"] = self.device_id_web_app
         self.access_token_data["userId"] = self.user_id
+        self.access_token_data["deviceId"] = self.device_id_sdk
 
     def host_tasks(self):
         global counter

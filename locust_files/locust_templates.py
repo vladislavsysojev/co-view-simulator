@@ -103,7 +103,8 @@ disconnect_data = {
 
 access_token_data = {
   "applicationKey": "some-uuid",
-  "userId": ""
+  "userId": "",
+  "deviceId": ""
 }
 
 room_content_ids = []
