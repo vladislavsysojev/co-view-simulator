@@ -1,19 +1,8 @@
 #!/usr/bin/env python
 import pytest
-from automation_infra.support_utils import FileUtil as f
 from automation_infra.report.AutomationReport import Report
-from locust_files.infra import locust_constants as const
+
 rep = Report()
-
-
-@pytest.fixture(scope="session", autouse=True)
-def general_prep(request):
-    # prepare something ahead of all tests
-    print("general setup")
-    f.createLocalFileOrDir(f"{const.locust_files_dir}/{const.locust_statistic_dir}")
-    f.cleanupDir(f"{const.locust_files_dir}/{const.locust_statistic_dir}")
-    rep.createReportsDir()
-    rep.cleanUpReportFiles()
 
 
 def pytest_addoption(parser):
@@ -21,6 +10,7 @@ def pytest_addoption(parser):
     parser.addoption("--u", "--user_num", action="store", default=13000)
     parser.addoption("--s", "--spawn_rate", action="store", default=108)
     parser.addoption("--t", "--time_to_run", action="store", default="3m")
+    parser.addoption("--ul", "--url", action="store", default="https://coview-automation.texel.live")
 
 
 @pytest.fixture(scope="class")
@@ -28,5 +18,6 @@ def params(request):
     params = {'workers_num': request.config.getoption("--w", "--workers_num"),
               'user_num': request.config.getoption("--u", "--user_num"),
               "spawn_rate": request.config.getoption("--s", "--spawn_rate"),
-              "time_to_run": request.config.getoption("--t", "--time_to_run")}
+              "time_to_run": request.config.getoption("--t", "--time_to_run"),
+              "url": request.config.getoption("--ul", "--url")}
     return params

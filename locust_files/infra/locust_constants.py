@@ -1,4 +1,5 @@
 from automation_infra.support_utils import FileUtil as f
+
 locust_templates = "locust_templates.py"
 locust_files_dir = "locust_files"
 locust_statistic_dir = "locust_statistic"
@@ -51,16 +52,16 @@ requirments_text = '''certifi==2020.12.5
 \nWerkzeug==1.0.1'''
 
 docker_services = {
-        "version": "3",
-        "services": {}}
+    "version": "3",
+    "services": {}}
 docker_worker = {'container_name': 'Distributed-Worker', 'image': 'locustio/locust',
-                     'depends_on': ['master-distributed'], 'volumes': ['./:/mnt/locust'],
-                     'command': '-f /mnt/locust/{0} --worker --master-host master-distributed'}
+                 'depends_on': ['master-distributed'], 'volumes': ['./:/mnt/locust'],
+                 'command': '-f /mnt/locust/{0} --worker --master-host master-distributed'}
 
 docker_master = {'container_name': 'Distributed-Master', 'image': 'locustio/locust', 'ports': ['8089:8089'],
-                     'volumes': ['./:/mnt/locust'],
-                     'command': '-f /mnt/locust/{0} --csv=/mnt/locust/{7}/{6} --master '
-                                '--expect-workers={1} --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99'}
+                 'volumes': ['./:/mnt/locust'],
+                 'command': '-f /mnt/locust/{0} --csv=/mnt/locust/{7}/{6} --master '
+                            '--expect-workers={1} --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99'}
 
 docker_compose_file = "docker-compose.yml"
 
@@ -81,8 +82,6 @@ rename_sh_path = str.format("{0}/rename.sh", locust_tasks_path)
 run_sh_path = str.format("{0}/run.sh", locust_tasks_path)
 master_deployment_file_path = str.format("{0}/{1}", kub_config_path, master_deployment_file)
 worker_deployment_file_path = str.format("{0}/{1}", kub_config_path, worker_deployment_file)
-
-
 
 load_test_cluster_connection_str = "gcloud container clusters get-credentials texel-load-tests-cluster " \
                                    "--zone europe-west2-a --project charged-mind-247422"

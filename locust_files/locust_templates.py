@@ -42,7 +42,7 @@ create_room_data = {
 
 enter_pin_data = {"pin": ""}
 
-pin_data = {"payload": "", "expiration": 1610004200660}
+pin_data = {"payload": ""}
 
 pin_data_full = {
     "payload": {
@@ -102,6 +102,7 @@ disconnect_data = {
 
 
 access_token_data = {
+  # "applicationKey": "b8082613-c01c-4b21-b500-7f18a06d8ca6",
   "applicationKey": "some-uuid",
   "userId": "",
   "deviceId": ""

@@ -1,171 +1,83 @@
-import time
-import unittest
-
+#!/usr/bin/env python
 import pytest
 import allure
 
-from automation_infra.pytest_config.pytes_suites.test_suite import TestClass
-from automation_infra.support_utils.SupportUtils import runCmd
-from automation_infra.support_utils.ts_var import Ts_Var
+from automation_infra.support_utils import FileUtil as f
 from automation_infra.test_validators.LocustValidator import validateLocustResults
-from locust_files.coview_end_to_end_load_test import CoViewEndToEndUser
-from locust_files.create_device_group import CreateDeviceId, CreteDeviceIdUser
-from locust_files.create_room import CreteRoomUser, CreateRoom
 from locust_files.infra.locust_runners import LocustRunner
+from automation_infra.report.AutomationReport import Report
+from locust_files.infra import locust_constants as const
+
+rep = Report()
 
 
-
-
-class TestCoViewSuite:
-
-
-
-
-
-    @pytest.fixture(autouse=True)
-    def prep(self):
-        # kub_sup.getKubernetesPods()
-        # kub_sup.exec_commands_on_pod("nginx-dep-5c5477cb4-92zwr")
-        print("prep")
-
-    # @allure.title("Device group component test")
-    # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(67, 8000, 67, "3m")])
-    # def test_create_device_group(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     # runCmd("cd /Users/vladislavsysojev/Documents/Texel/Git/co-view-simulator/automation_infra/firebase_client"
-    #     #        "/sample-client/;npm install;npm build .;npm start")
-    #     runner = LocustRunner()
-    #     # runner.run_with_docker("locust_files/create_device_group.py", 10, "https://coview-automation.texel.live",
-    #     #                        3000, 25, "4m")
-    #     # time.sleep(10)
-    #     # runner.invoker_run([CreteDeviceIdUser], "https://coview-automation.texel.live", user_num, spawn_rate, time_to_run)
-    #     # runner.cmd_run_distributed_mode_locally("locust_files/create_device_group.py", "https://coview-automation.texel.live",
-    #     #                                         user_num,
-    #     #                                         spawn_rate, time_to_run, "99")
-    #
-    #     runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num, spawn_rate,
-    #                                        time_to_run, "create_device_group.py")
-    #     # runner.cmd_run("locust_files/create_device_group.py", "http://34.105.159.99:8080", user_num,
-    #     #                spawn_rate, time_to_run, "99")
-    #     # results = Ts_Var.getTs_Var(Ts_Var.Instance(), "results")
-    #     validateLocustResults(runner.unique_statistics_name)
-
-    # @allure.title("Co-view end to end load test")
-    # # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(10, 1300, 10, "3m")])
-    # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(10, 1000, 1, "3m")])
-    # def test_end_to_end_co_view(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     runner = LocustRunner()
-    #     time.sleep(10)
-    #     runner.invoker_run([CoViewEndToEndUser], "https://coview-automation.texel.live", user_num, spawn_rate,
-    #                        time_to_run)
-    #     # runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num,
-    #     #                                    spawn_rate, time_to_run, "coview_end_to_end_load_test.py")
-    #     # runner.cmd_run_distributed_mode_locally("locust_files/coview_end_to_end_load_test.py",
-    #     #                                         "https://coview-automation.texel.live",
-    #     #                                         user_num, spawn_rate, time_to_run, "99")
-    #     validateLocustResults(runner.unique_statistics_name)
-
-    # @allure.title("Create Enter Pin code test")
-    # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(100, 13000, 108, "3m")])
-    # def test_create_device_group(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     runner = LocustRunner()
-    #     runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num, spawn_rate,
-    #                                        time_to_run, "create_enter_pin_code.py")
-    #     validateLocustResults(runner.unique_statistics_name)
-
-    # @allure.title("Create Pin code test")
-    # # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(100, 20000, 167, "3m")])
-    # def test_create_pin_code(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     runner = LocustRunner()
-    #     runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num, spawn_rate,
-    #                                        time_to_run, "create_pin_code.py")
-    #     validateLocustResults(runner.unique_statistics_name)
-
-    # @allure.title("Connect test")
-    # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(100, 20000, 167, "3m")])
-    # def test_connect(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     runner = LocustRunner()
-    #     runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num, spawn_rate,
-    #                                        time_to_run, "connect.py")
-    #     validateLocustResults(runner.unique_statistics_name)
-
-    # @allure.title("health test")
-    # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(100, 10000, 85, "5m")])
-    # def test_create_device_group(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     runner = LocustRunner()
-    #     runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num, spawn_rate,
-    #                                        time_to_run, "health.py")
-    #     validateLocustResults(runner.unique_statistics_name)
-    # @allure.title("create room")
-    # @pytest.mark.parametrize("workers_num, user_num, spawn_rate, time_to_run", [(100, 13000, 108, "3m")])
-    # def test_create_device_group(self, workers_num, user_num, spawn_rate, time_to_run):
-    #     print("test1")
-    #     runner = LocustRunner()
-    #     # runner.invoker_run([CreateRoom], "https://coview-automation.texel.live", user_num, spawn_rate,
-    #     #                    time_to_run)
-    #     runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", workers_num, user_num, spawn_rate,
-    #                                        time_to_run, "create_room.py")
-    #     validateLocustResults(runner.unique_statistics_name)
-
-
+@pytest.fixture(autouse=True, scope="session")
+def set_up():
+    print("Automation infra general preparation start")
+    from pathlib import Path
+    home = str(Path.home())
+    print(home)
+    f.createLocalFileOrDir(f"{const.locust_files_dir}/{const.locust_statistic_dir}")
+    f.cleanupDir(f"{const.locust_files_dir}/{const.locust_statistic_dir}")
+    rep.createReportsDir()
+    rep.cleanUpReportFiles()
+    print("Automation infra general preparation completed")
 
 
 @allure.title("Device group component test")
 @pytest.mark.usefixtures("params")
 def test_create_device_group(params):
     runner = LocustRunner()
-    runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", params["workers_num"],
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
                                        "create_device_group.py")
-    validateLocustResults(runner.unique_statistics_name)
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
+
 
 @allure.title("Co-view end to end load test")
 @pytest.mark.usefixtures("params")
 def test_end_to_end_co_view(params):
     runner = LocustRunner()
-    runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", params["workers_num"],
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
                                        "coview_end_to_end_load_test.py")
-    validateLocustResults(runner.unique_statistics_name)
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
+
 
 @allure.title("Create Enter Pin code test")
 @pytest.mark.usefixtures("params")
-def test_enter_pin_code(self, params):
+def test_enter_pin_code(params):
     runner = LocustRunner()
-    runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", params["workers_num"],
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
                                        "create_enter_pin_code.py")
-    validateLocustResults(runner.unique_statistics_name)
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
+
 
 @allure.title("Create Pin code test")
 @pytest.mark.usefixtures("params")
 def test_create_pin_code(params):
     runner = LocustRunner()
-    runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", params["workers_num"],
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"],
                                        params["time_to_run"], "create_pin_code.py")
-    validateLocustResults(runner.unique_statistics_name)
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
 @allure.title("health test")
 @pytest.mark.usefixtures("params")
 def test_health(params):
     runner = LocustRunner()
-    runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", params["workers_num"],
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"], "health.py")
-    validateLocustResults(runner.unique_statistics_name)
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
 @allure.title("create room")
 @pytest.mark.usefixtures("params")
 def test_create_room(params):
     runner = LocustRunner()
-    runner.run_distributed_mode_on_gcp("https://coview-automation.texel.live", params["workers_num"],
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
                                        "create_room.py")
-    validateLocustResults(runner.unique_statistics_name)
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)

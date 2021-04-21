@@ -25,8 +25,11 @@ from automation_infra.support_utils import FileUtil as f
 
 class LocustRunner:
 
-    def invoker_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
+    def __init__(self):
+        self.unique_log_name = sup.createUnigueName("locust_logs")
         self.unique_statistics_name = sup.createUnigueName("locust_results")
+
+    def invoker_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
         settings = invokust.create_settings(
             classes=user_classes,
             host=host,
@@ -96,7 +99,6 @@ class LocustRunner:
     def run_distributed_mode_on_gcp(self, host, expected_workers_num, num_of_users, spawn_rate, run_time,
                                     locust_file_to_run):
         self.unique_statistics_name = sup.createUnigueName("locust_results")
-        self.unique_log_name = sup.createUnigueName("locust_logs")
         f.replace_master_yaml_value(const.master_deployment_file_path, host)
         f.replace_worker_yaml_value(const.worker_deployment_file_path, host, expected_workers_num)
         docker_file_text = str.format(const.docker_file_text, locust_file_to_run, const.locust_templates,
@@ -125,7 +127,6 @@ class LocustRunner:
         except Exception as e:
             raise Exception(str.format("Fail to run load test on GCP cloud cause of error: {0}"), e)
         finally:
-            # sup.runCmd(str.format(const.delete_pod_cmd_force, master_pod))
             sup.runCmd(const.delete_master_deployment_cmd)
             sup.runCmd(const.delete_worker_deployment_cmd)
             sup.runCmd(str.format(const.create_pod_cmd, const.persistence_file_path))
@@ -133,4 +134,3 @@ class LocustRunner:
             time.sleep(5)
             sup.runCmd(const.copy_locust_statistics_cmd)
             sup.runCmd(str.format(const.delete_pod_cmd, const.persistence_pod_name))
-            print("exit")

@@ -1,23 +1,27 @@
 import unittest
-from automation_infra.report.AutomationReport import Report
+
 import allure
+import pytest
+from automation_infra.support_utils import FileUtil as f
+from automation_infra.report.AutomationReport import Report
+from locust_files.infra import locust_constants as const
 rep = Report()
 
 
-# @allure.testcase("Automation infra")
-class TestClass(unittest.TestCase):
+@allure.feature("Automation infra")
+class TestClass:
+    @pytest.fixture(autouse=True, scope="session")
+    def set_up(self):
+        print("Automation infra general preparation start")
+        from pathlib import Path
+        home = str(Path.home())
+        print(home)
+        f.createLocalFileOrDir(f"{const.locust_files_dir}/{const.locust_statistic_dir}")
+        f.cleanupDir(f"{const.locust_files_dir}/{const.locust_statistic_dir}")
+        rep.createReportsDir()
+        rep.cleanUpReportFiles()
+        print("Automation infra general preparation completed")
 
-    @classmethod
-    def setUpClass(cls):
-        print("Automation infra suite preparation start")
-
-        print("Automation infra suite preparation completed")
-
-    @classmethod
-    def tearDownClass(cls):
-        print("Automation infra suite teardown start")
-        print("Automation infra suite teardown completed")
 
 
-# if __name__ == "__main__":
-#     unittest.main()
+
