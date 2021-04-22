@@ -19,7 +19,7 @@ spec:
         - name: LOCUST_MODE
           value: master
         - name: TARGET_HOST
-          value: https://coview-automation.texel.live
+          value: https://heimspiel-engagement.texel.live
         image: gcr.io/charged-mind-247422/loadtest:latest
         name: locust-master
         ports:

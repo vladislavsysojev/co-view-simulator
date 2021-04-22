@@ -64,7 +64,8 @@ docker_master = {'container_name': 'Distributed-Master', 'image': 'locustio/locu
                             '--expect-workers={1} --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99'}
 
 docker_compose_file = "docker-compose.yml"
-
+locust_results = "locust_results"
+locust_logs = "locust_logs"
 master_deployment_file = "locust-master-controller.yaml"
 worker_deployment_file = "locust-worker-controller.yaml"
 gcloud_project_id = "charged-mind-247422"

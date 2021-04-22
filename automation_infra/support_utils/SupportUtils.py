@@ -17,6 +17,7 @@ iterator = 1
 log = ILog("Support Utils")
 names_diff = []
 
+
 def createUnigueName(name):
     with lock:
         if name not in names_diff:
@@ -65,7 +66,8 @@ def runCmd(cmd):
 def runMultipleCmdsAsync(cmds):
     process_list = []
     for cmd in cmds.split(";"):
-        process_list.append(subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+        process_list.append(
+            subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
     main_process = process_list[0]
 
     sel = selectors.DefaultSelector()
