@@ -24,8 +24,7 @@ docker_file_text = '''FROM python:3.9.1\n# Add the licenses for third party soft
 run_sh_text = '''#!/bin/bash\nLOCUST="/usr/local/bin/locust" \nLOCUS_OPTS="-f {6}" \nsleep 60 
         \nLOCUST_MODE=${{LOCUST_MODE:-standalone}} 
         \n \nif [[ "$LOCUST_MODE" = "master" ]]; then \nls -ltrh /{0} \nls
-        \nrm -rf /{0}/* \nLOCUS_OPTS="$LOCUS_OPTS --csv=/{0}/ --logfile=/{0}/{7}.log --master --expect-workers={1} 
-        --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99" \nelif [[ "$LOCUST_MODE" = "worker" ]]; then 
+        \nrm -rf /{0}/* \nLOCUS_OPTS="$LOCUS_OPTS --csv=/{0}/ --logfile=/{0}/{7}.log --master --expect-workers={1} --headless -H {2} -u {3} -r {4} --run-time {5} --stop-time 99" \nelif [[ "$LOCUST_MODE" = "worker" ]]; then 
         \n LOCUS_OPTS="$LOCUS_OPTS --worker --master-host=$LOCUST_MASTER" \nfi \necho "$LOCUST $LOCUS_OPTS" \n 
         \n$LOCUST $LOCUS_OPTS \nchmod +x /{0} \nchmod +x /{0}/*\nsleep 30 \nls -ltrh /{0}/*
         \nchmod +x /locust-tasks/rename.sh;mv /locust-tasks/rename.sh /{0}/;cd /{0}/;./rename.sh
@@ -49,7 +48,8 @@ requirments_text = '''certifi==2020.12.5
 \nrequests==2.25.1 
 \nsix==1.15.0 
 \nurllib3==1.26.3 
-\nWerkzeug==1.0.1'''
+\nWerkzeug==1.0.1
+\nlocust-plugins==1.1.7'''
 
 docker_services = {
     "version": "3",
@@ -68,13 +68,16 @@ locust_results = "locust_results"
 locust_logs = "locust_logs"
 master_deployment_file = "locust-master-controller.yaml"
 worker_deployment_file = "locust-worker-controller.yaml"
+master_deployment_service_file = "locust-master-service.yaml"
 gcloud_project_id = "charged-mind-247422"
 persistence_deployment_file = "locust-persistency.yaml"
+persistence_volume_deployment_file = "persistent-volume-load-test.yaml"
 master_deployment_name = "locust-master"
 worker_deployment_name = "locust-worker"
 persistence_pod_name = "dataaccess"
 kub_config_path = str.format("{}/locust_files/kubernetes-config/", f.getFullPath(""))
 persistence_file_path = kub_config_path + persistence_deployment_file
+persistence_clime_file_path = kub_config_path + persistence_volume_deployment_file
 locust_files_path = str.format("{}/locust_files", f.getFullPath(""))
 docker_file_path = str.format("{0}/Dockerfile", locust_files_path)
 locust_tasks_path = str.format("{}/locust_files/docker-image/locust-tasks", f.getFullPath(""))
@@ -83,17 +86,21 @@ rename_sh_path = str.format("{0}/rename.sh", locust_tasks_path)
 run_sh_path = str.format("{0}/run.sh", locust_tasks_path)
 master_deployment_file_path = str.format("{0}/{1}", kub_config_path, master_deployment_file)
 worker_deployment_file_path = str.format("{0}/{1}", kub_config_path, worker_deployment_file)
-
-load_test_cluster_connection_str = "gcloud container clusters get-credentials texel-load-tests-cluster " \
-                                   "--zone europe-west2-a --project charged-mind-247422"
+master_service_deployment_file_path = str.format("{0}/{1}", kub_config_path, master_deployment_service_file)
 
 push_image_cmd = "gcloud builds submit --tag gcr.io/charged-mind-247422/loadtest:latest ."
 
 create_pod_cmd = "kubectl apply -f {0}"
 
+create_pvc_clime = str.format(create_pod_cmd, persistence_clime_file_path)
+
+create_pvc_access_pod = str.format(create_pod_cmd, persistence_file_path)
+
 create_master_pod_cmd = str.format(create_pod_cmd + master_deployment_file, kub_config_path)
 
 create_worker_pod_cmd = str.format(create_pod_cmd + worker_deployment_file, kub_config_path)
+
+create_master_service_pod_cmd = str.format(create_pod_cmd + master_deployment_service_file, kub_config_path)
 
 get_kubectl_logs = "kubectl logs -f {0}"
 
@@ -111,6 +118,20 @@ copy_locust_statistics_cmd = str.format("kubectl cp {1}:/{2} {0}/{2}/ ", locust_
                                         locust_statistic_dir)
 
 docker_compose_up_cmd = "docker-compose up"
+# gcp_load_cluster = "texel-load-tests-cluster"
+gcp_load_cluster = "load-test-cluster-demo"
+gcp_zone = "europe-west2-a"
+# gcloud container clusters upgrade NAME
+load_test_cluster_connection_str = f"gcloud container clusters get-credentials {gcp_load_cluster} " \
+                                   f"--zone {gcp_zone} --project {gcloud_project_id}"
+
+create_cluster_cmg = f"gcloud container clusters create {gcp_load_cluster} --zone {gcp_zone}" \
+                     " --scopes 'https://www.googleapis.com/auth/cloud-platform' --machine-type 'c2-standard-8'" \
+                     " --enable-autoscaling --min-nodes '0' --max-nodes '10' --scopes=logging-write,storage-ro" \
+                     " --addons HorizontalPodAutoscaling,HttpLoadBalancing"
+
+gcp_cluster_status = str.format("""gcloud container clusters list --zone {} | awk '/{}/{}'""", gcp_zone,
+                                gcp_load_cluster, "{print $8}")
 
 locust_run_command = "locust -f {0} --csv={7}/{1} --headless --host {2} -u {3} -r {4} " \
                      "--run-time {5} --stop-time {6} "
@@ -121,3 +142,7 @@ locust_master_command = "locust -f {0} --csv={8}/{1} --master --headless --expec
 locust_worker_command = "locust -f {0} --worker"
 
 gcloud_set_project_cmd = str.format("gcloud config set project {0}", gcloud_project_id)
+
+upgrade_cluster_cmd = f"gcloud container clusters upgrade {gcp_load_cluster} --zone {gcp_zone} --quiet"
+
+gcloud_cluster_delete = f"gcloud container clusters delete {gcp_load_cluster} --zone {gcp_zone} --quiet"

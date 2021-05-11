@@ -12,6 +12,7 @@ import invokust
 import yaml
 
 from automation_infra.support_utils import kubernetes_support as kub_sup
+from automation_infra.support_utils.gcp_support import wait_cluster_status
 
 yaml.Dumper.ignore_aliases = lambda *args: True
 
@@ -26,8 +27,8 @@ from automation_infra.support_utils import FileUtil as f
 class LocustRunner:
 
     def __init__(self):
-        self.unique_log_name = sup.createUnigueName("locust_logs")
-        self.unique_statistics_name = sup.createUnigueName("locust_results")
+        self.unique_log_name = sup.createUnigueName(const.locust_logs)
+        self.unique_statistics_name = sup.createUnigueName(const.locust_results)
 
     def invoker_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
         settings = invokust.create_settings(
@@ -42,17 +43,16 @@ class LocustRunner:
         return load_test.stats()
 
     def cmd_run(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
-        self.unique_statistics_name = sup.createUnigueName("locust_results")
         try:
-            sup.runCmd(str.format(const.locust_run_command, locust_file, self.unique_statistics_name, host, num_of_users,
-                                  spawn_rate, run_time, stop_time, const.locust_statistics_local_run_path))
+            sup.runCmd(
+                str.format(const.locust_run_command, locust_file, self.unique_statistics_name, host, num_of_users,
+                           spawn_rate, run_time, stop_time, const.locust_statistics_local_run_path))
         except Exception as e:
             print(e)
             pass
 
     @allure.step("Run locust distributed mode locally")
-    def cmd_run_distributed_mode_locally(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
-        self.unique_statistics_name = sup.createUnigueName("locust_results")
+    def cm_mode_locallyd_run_distributed(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
         num_of_workers = multiprocessing.cpu_count() - 1
         cmd = str.format(const.locust_master_command, locust_file, self.unique_statistics_name, num_of_workers, host,
                          num_of_users, spawn_rate, run_time, stop_time, const.locust_statistics_local_run_path)
@@ -66,7 +66,6 @@ class LocustRunner:
 
     @allure.step("Run locust with env tool locally")
     def env_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
-        self.unique_statistics_name = sup.createUnigueName("locust_results")
         env = Environment(user_classes=user_classes)
         env.create_local_runner()
         env.runner.start(num_of_users, spawn_rate=spawn_rate)
@@ -77,7 +76,6 @@ class LocustRunner:
 
     @allure.step("Run locust distributed mode with docker locally")
     def run_with_docker(self, locust_file_path, worker_num, host, user_num, spawn_rate, run_time):
-        self.unique_statistics_name = sup.createUnigueName("locust_results")
         docker_master = const.docker_master.copy()
         docker_worker = const.docker_worker.copy()
         docker_services = const.docker_services.copy()
@@ -98,7 +96,6 @@ class LocustRunner:
     @allure.step("Run locust distributed mode on GCP cloud")
     def run_distributed_mode_on_gcp(self, host, expected_workers_num, num_of_users, spawn_rate, run_time,
                                     locust_file_to_run):
-        self.unique_statistics_name = sup.createUnigueName("locust_results")
         f.replace_master_yaml_value(const.master_deployment_file_path, host)
         f.replace_worker_yaml_value(const.worker_deployment_file_path, host, expected_workers_num)
         docker_file_text = str.format(const.docker_file_text, locust_file_to_run, const.locust_templates,
@@ -113,10 +110,22 @@ class LocustRunner:
         f.create_text_file(const.requirements_txt_path, const.requirments_text)
         master_pod = ''
         try:
+            sup.runCmd(const.gcloud_cluster_delete)
             sup.runCmd(const.gcloud_set_project_cmd)
+            sup.runCmd(const.create_cluster_cmg)
+            sup.runCmd(wait_cluster_status("running", 5, 30))
+            sup.runCmd(const.upgrade_cluster_cmd)
             sup.runCmd(const.load_test_cluster_connection_str)
+
+            sup.runCmd(const.create_pvc_clime)
+
+            pods = kub_sup.getRunningKubernetesPods(1, 180)
+            for pod_name in pods:
+                print(pod_name)
+
             sup.runCmd(f"cd {const.locust_files_path};{const.push_image_cmd}")
             sup.runCmd(const.create_master_pod_cmd)
+            sup.runCmd(const.create_master_service_pod_cmd)
             sup.runCmd(const.create_worker_pod_cmd)
             pods = kub_sup.getRunningKubernetesPods(1, 180)
             for pod_name in pods:
@@ -129,8 +138,9 @@ class LocustRunner:
         finally:
             sup.runCmd(const.delete_master_deployment_cmd)
             sup.runCmd(const.delete_worker_deployment_cmd)
-            sup.runCmd(str.format(const.create_pod_cmd, const.persistence_file_path))
+            sup.runCmd(const.create_pvc_access_pod)
             kub_sup.getRunningKubernetesPods(1, 60)
             time.sleep(5)
             sup.runCmd(const.copy_locust_statistics_cmd)
             sup.runCmd(str.format(const.delete_pod_cmd, const.persistence_pod_name))
+            sup.runCmd(const.gcloud_cluster_delete)

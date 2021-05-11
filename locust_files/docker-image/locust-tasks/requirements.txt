@@ -31,3 +31,5 @@ six==1.15.0
 urllib3==1.26.3 
 
 Werkzeug==1.0.1
+
+locust-plugins==1.1.7
