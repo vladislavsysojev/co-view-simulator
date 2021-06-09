@@ -119,7 +119,7 @@ copy_locust_statistics_cmd = str.format("kubectl cp {1}:/{2} {0}/{2}/ ", locust_
 
 docker_compose_up_cmd = "docker-compose up"
 # gcp_load_cluster = "texel-load-tests-cluster"
-gcp_load_cluster = "load-test-cluster-demo"
+gcp_load_cluster = "load-test-simulator-cluster-demo"
 gcp_zone = "europe-west2-a"
 # gcloud container clusters upgrade NAME
 load_test_cluster_connection_str = f"gcloud container clusters get-credentials {gcp_load_cluster} " \
