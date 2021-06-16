@@ -3,12 +3,7 @@ import time
 
 import allure
 import invokust
-# try:
-#     from gevent.monkey import patch_all
-#
-#     patch_all()
-# except ImportError:
-#     pass
+from datetime import datetime
 import yaml
 
 from automation_infra.support_utils import kubernetes_support as kub_sup
@@ -132,7 +127,9 @@ class LocustRunner:
                 if "master" in pod_name:
                     master_pod = pod_name
                     break
+            print(f"Starting to run load {str(datetime.now())}")
             sup.runCmd(str.format(const.get_kubectl_logs, master_pod))
+            print(f"Load was finished {str(datetime.now())}")
         except Exception as e:
             raise Exception(str.format("Fail to run load test on GCP cloud cause of error: {0}"), e)
         finally:
