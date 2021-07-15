@@ -1,4 +1,5 @@
 from automation_infra.support_utils import FileUtil as f
+from automation_infra.support_utils import SupportUtils as sup
 
 locust_templates = "locust_templates.py"
 locust_files_dir = "locust_files"
@@ -117,21 +118,49 @@ delete_worker_deployment_cmd = str.format(delete_deployment_cmd, worker_deployme
 copy_locust_statistics_cmd = str.format("kubectl cp {1}:/{2} {0}/{2}/ ", locust_files_path, persistence_pod_name,
                                         locust_statistic_dir)
 
+delete_service = f"kubectl delete svc {master_deployment_name}"
+
 docker_compose_up_cmd = "docker-compose up"
-# gcp_load_cluster = "texel-load-tests-cluster"
-gcp_load_cluster = "load-test-simulator-cluster-demo"
-gcp_zone = "europe-west2-a"
+gcp_load_cluster = "load-test-simulator-cluster-demo-"
+
+
+def init_cluster_name(name=gcp_load_cluster):
+    global gcp_load_cluster
+    if name == gcp_load_cluster:
+        name = sup.create_global_unique_name_once(name, 2)
+    else:
+        sup.names_diff.append(name)
+        global load_test_cluster_connection_str
+        load_test_cluster_connection_str = f"gcloud container clusters get-credentials {name}" \
+                                           f" --zone {gcp_zone} --project {gcloud_project_id}"
+        global create_cluster_cmg
+        create_cluster_cmg = f"gcloud container clusters create {name} --zone {gcp_zone}" \
+                             " --scopes 'https://www.googleapis.com/auth/cloud-platform' --machine-type 'c2-standard-8'" \
+                             " --enable-autoscaling --min-nodes '0' --max-nodes '10' --scopes=logging-write,storage-ro" \
+                             " --addons HorizontalPodAutoscaling,HttpLoadBalancing"
+        global gcp_cluster_status
+        gcp_cluster_status = str.format("""gcloud container clusters list --zone {} | awk '/{}/{}'""", gcp_zone,
+                                        name, "{print $8}")
+        global upgrade_cluster_cmd
+        upgrade_cluster_cmd = f"gcloud container clusters upgrade {name} --zone {gcp_zone} --quiet"
+        global gcloud_cluster_delete
+        gcloud_cluster_delete = f"gcloud container clusters delete {name} --zone {gcp_zone} --quiet"
+    return name
+
+
+
+gcp_zone = "us-central1-a"
 # gcloud container clusters upgrade NAME
-load_test_cluster_connection_str = f"gcloud container clusters get-credentials {gcp_load_cluster} " \
+load_test_cluster_connection_str = f"gcloud container clusters get-credentials {init_cluster_name()} " \
                                    f"--zone {gcp_zone} --project {gcloud_project_id}"
 
-create_cluster_cmg = f"gcloud container clusters create {gcp_load_cluster} --zone {gcp_zone}" \
+create_cluster_cmg = f"gcloud container clusters create {init_cluster_name()} --zone {gcp_zone}" \
                      " --scopes 'https://www.googleapis.com/auth/cloud-platform' --machine-type 'c2-standard-8'" \
-                     " --enable-autoscaling --min-nodes '0' --max-nodes '10' --scopes=logging-write,storage-ro" \
+                     " --num-nodes '6' --enable-autoscaling --min-nodes '0' --max-nodes '10' --scopes=logging-write,storage-ro" \
                      " --addons HorizontalPodAutoscaling,HttpLoadBalancing"
 
 gcp_cluster_status = str.format("""gcloud container clusters list --zone {} | awk '/{}/{}'""", gcp_zone,
-                                gcp_load_cluster, "{print $8}")
+                                init_cluster_name(), "{print $8}")
 
 locust_run_command = "locust -f {0} --csv={7}/{1} --headless --host {2} -u {3} -r {4} " \
                      "--run-time {5} --stop-time {6} "
@@ -143,6 +172,6 @@ locust_worker_command = "locust -f {0} --worker"
 
 gcloud_set_project_cmd = str.format("gcloud config set project {0}", gcloud_project_id)
 
-upgrade_cluster_cmd = f"gcloud container clusters upgrade {gcp_load_cluster} --zone {gcp_zone} --quiet"
+upgrade_cluster_cmd = f"gcloud container clusters upgrade {init_cluster_name()} --zone {gcp_zone} --quiet"
 
-gcloud_cluster_delete = f"gcloud container clusters delete {gcp_load_cluster} --zone {gcp_zone} --quiet"
+gcloud_cluster_delete = f"gcloud container clusters delete {init_cluster_name()} --zone {gcp_zone} --quiet"

@@ -105,15 +105,8 @@ class LocustRunner:
         f.create_text_file(const.requirements_txt_path, const.requirments_text)
         master_pod = ''
         try:
-            sup.runCmd(const.gcloud_cluster_delete)
-            sup.runCmd(const.gcloud_set_project_cmd)
-            sup.runCmd(const.create_cluster_cmg)
-            sup.runCmd(wait_cluster_status("running", 5, 30))
-            sup.runCmd(const.upgrade_cluster_cmd)
             sup.runCmd(const.load_test_cluster_connection_str)
-
             sup.runCmd(const.create_pvc_clime)
-
             pods = kub_sup.getRunningKubernetesPods(1, 180)
             for pod_name in pods:
                 print(pod_name)
@@ -135,9 +128,9 @@ class LocustRunner:
         finally:
             sup.runCmd(const.delete_master_deployment_cmd)
             sup.runCmd(const.delete_worker_deployment_cmd)
+            sup.runCmd(const.delete_service)
             sup.runCmd(const.create_pvc_access_pod)
             kub_sup.getRunningKubernetesPods(1, 60)
             time.sleep(5)
             sup.runCmd(const.copy_locust_statistics_cmd)
             sup.runCmd(str.format(const.delete_pod_cmd, const.persistence_pod_name))
-            sup.runCmd(const.gcloud_cluster_delete)

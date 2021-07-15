@@ -14,12 +14,25 @@ from locust import events
 
 
 from locust import task, TaskSet, constant, HttpUser
+from locust_plugins.users import SocketIOUser
+
 import locust_files.locust_templates as temp
+
 time_list = []
 counter = 0
+
+f = ""
 # from automation_infra.requests_api import rest_api_request_data as req_data
 # from locust_files.infra.locust_infra import LocustTestUser
 
+# @events.init_command_line_parser.add_listener
+# def init_parser(parser):
+#     parser.add_argument("--wb-host", type=str, env_var="LOCUST_WB_HOST", default="ddd", help="It's working")
+#
+#
+# @events.init.add_listener
+# def _(environment, **kw):
+#     print("Custom argument supplied: %s" % environment.parsed_options.wb_host)
 
 class CoViewEndToEnd(TaskSet):
     # def __init__(self, parent):
@@ -63,8 +76,6 @@ class CoViewEndToEnd(TaskSet):
                 return
             time.sleep(1)
 
-
-
     def leave_room(self, room_id):
         participant_counter = 0
         is_host = True
@@ -89,9 +100,6 @@ class CoViewEndToEnd(TaskSet):
             response = self.client.post(f"/v1/users/disconnect", name=name_disconnect,
                                         headers={"Content-Type": "application/json", "USER_ID": user,
                                                  "DEVICE_ID": device}, json=self.disconnect_data)
-
-
-
 
     def create_requests_data(self):
         self.user_id = str(uuid.uuid4())

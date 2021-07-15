@@ -103,7 +103,7 @@ disconnect_data = {
 
 access_token_data = {
   # "applicationKey": "b8082613-c01c-4b21-b500-7f18a06d8ca6",
-  "applicationKey": "some-uuid",
+  "applicationKey": "60fa9aa0-0bcd-462b-ae7c-d15b425c54e9",
   "userId": "",
   "deviceId": ""
 }

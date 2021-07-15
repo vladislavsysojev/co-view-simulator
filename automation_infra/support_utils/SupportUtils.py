@@ -1,7 +1,7 @@
-import multiprocessing
-import selectors
 import subprocess
-
+import random
+import selectors
+import string
 import re
 import time
 # import StringIO
@@ -16,6 +16,7 @@ lock = RLock()
 iterator = 1
 log = ILog("Support Utils")
 names_diff = []
+single_unique_name = ""
 
 
 def createUnigueName(name):
@@ -78,6 +79,36 @@ def runCmd(cmd):
     return result
 
 
+def create_global_unique_name(name, length):
+    """
+    Creates unique name with random characters range at the end of name
+    @param name: name
+    @type name: str
+    @param length: length of random characters
+    @type length: int
+    @return: unique name
+    @rtype: str
+    """
+    unique_str = "".join(random.choice(string.ascii_letters) for x in range(length))
+    return str.lower(f"{name}{unique_str}")
+
+
+def create_global_unique_name_once(name, length):
+    """
+    Creates unique name with random characters range at the end of name
+    @param name: name
+    @type name: str
+    @param length: length of random characters
+    @type length: int
+    @return: unique name
+    @rtype: str
+    """
+    global single_unique_name
+    if name not in names_diff:
+        names_diff.append(name)
+        unique_str = "".join(random.choice(string.ascii_letters) for x in range(length))
+        single_unique_name = str.lower(f"{name}{unique_str}")
+    return single_unique_name
 
 
 def runMultipleCmdsAsync(cmds):
