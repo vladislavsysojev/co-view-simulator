@@ -83,6 +83,7 @@ class CoViewEndToEndLongevity(TaskSet):
         self.register_channel_data["deviceId"] = self.device_id_web_app
         self.access_token_data["userId"] = self.user_id
         self.access_token_data["deviceId"] = self.device_id_sdk
+        self.access_token_data["applicationKey"] = temp.read_file("/locust_files/app_key.txt")
 
     def host_tasks(self):
         room_id = ""

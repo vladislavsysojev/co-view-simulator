@@ -1,44 +1,46 @@
+import os
+
 login_data = {
-            "userId": "",
-            "device": {
-                "id": "",
-                "name": "TV APP",
-                "platform": "ANDROID",
-                "capabilities": {
-                    "MEDIA_SYNC": "READ"
-                }
-            },
-            "clientProtocols": [
-                "FIRESTORE"
-            ]
+    "userId": "",
+    "device": {
+        "id": "",
+        "name": "TV APP",
+        "platform": "ANDROID",
+        "capabilities": {
+            "MEDIA_SYNC": "READ"
         }
+    },
+    "clientProtocols": [
+        "FIRESTORE"
+    ]
+}
 
 create_device_id = {
-            "deviceId": "",
-        }
+    "deviceId": "",
+}
 
 create_room_data = {
-            "creator": {
-                "id": ""
-            },
-            "initialState": "PLAY",
-            "initialPosition": 0,
-            "content": {
-                "id": "",
-                "playbackUrls": [
-                    "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.m3u8",
-                ]
-            },
-            "roomInformation": {
-                "homeTeam": "FC Würzburger Kickers",
-                "homeTeamLogoUrl": "https://stg-zeus-telekomsport-de.laola1.at/images/editorial/Mataracan/Logos_neu/FWK200x200.png?time=1544545891822&h=150",
-                "awayTeam": "FC Bayern München II",
-                "awayTeamLogoUrl": "https://stg-zeus-telekomsport-de.laola1.at/images/editorial/Logos/Fussball/Bundesliga/01_fc_bayern_200x200.png?time=1562156010808&h=150",
-                "eventName": "FSV Zwickau - FC Ingolstadt",
-                "competitionName": "3. Liga Spieltag 15",
-                "scheduledStartTime": 1563623100000
-            }
-        }
+    "creator": {
+        "id": ""
+    },
+    "initialState": "PLAY",
+    "initialPosition": 0,
+    "content": {
+        "id": "",
+        "playbackUrls": [
+            "https://svc43.main.sl.t-online.de/dlt3/out/u/hssfcbayern01_fm.m3u8",
+        ]
+    },
+    "roomInformation": {
+        "homeTeam": "FC Würzburger Kickers",
+        "homeTeamLogoUrl": "https://stg-zeus-telekomsport-de.laola1.at/images/editorial/Mataracan/Logos_neu/FWK200x200.png?time=1544545891822&h=150",
+        "awayTeam": "FC Bayern München II",
+        "awayTeamLogoUrl": "https://stg-zeus-telekomsport-de.laola1.at/images/editorial/Logos/Fussball/Bundesliga/01_fc_bayern_200x200.png?time=1562156010808&h=150",
+        "eventName": "FSV Zwickau - FC Ingolstadt",
+        "competitionName": "3. Liga Spieltag 15",
+        "scheduledStartTime": 1563623100000
+    }
+}
 
 enter_pin_data = {"pin": ""}
 
@@ -91,21 +93,34 @@ register_channel_data = {
 }
 
 leave_room_data = {
-     "deviceId": "",
-     "userId": ""
+    "deviceId": "",
+    "userId": ""
 }
 
 disconnect_data = {
-  "userId": "",
-  "deviceId": ""
+    "userId": "",
+    "deviceId": ""
 }
 
-
 access_token_data = {
-  # "applicationKey": "b8082613-c01c-4b21-b500-7f18a06d8ca6",
-  "applicationKey": "60fa9aa0-0bcd-462b-ae7c-d15b425c54e9",
-  "userId": "",
-  "deviceId": ""
+    # "applicationKey": "b8082613-c01c-4b21-b500-7f18a06d8ca6",
+    "applicationKey": "",
+    "userId": "",
+    "deviceId": ""
 }
 
 room_content_ids = []
+
+
+def read_file(name):
+    """
+    It get get file name located in root dir and return the file text string
+    This function required to red access taken file on remote rune
+    @note: Do not remove this function it will take affect on load test run
+    @param name: file name
+    @type name: str
+    @return: file text
+    @rtype: str
+    """
+    with open(os.path.join(os.getcwd(), name), 'r') as f:
+        return f.read().replace("\n", "")

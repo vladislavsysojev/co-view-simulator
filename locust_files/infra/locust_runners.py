@@ -25,7 +25,8 @@ class LocustRunner:
         self.unique_log_name = sup.createUnigueName(const.locust_logs)
         self.unique_statistics_name = sup.createUnigueName(const.locust_results)
 
-    def invoker_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
+    def invoker_run(self, user_classes, host, num_of_users, spawn_rate, run_time, app_key):
+        f.create_text_file(const.app_key_path, app_key)
         settings = invokust.create_settings(
             classes=user_classes,
             host=host,
@@ -37,7 +38,7 @@ class LocustRunner:
         load_test.run()
         return load_test.stats()
 
-    def cmd_run(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
+    def cmd_run(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time, app_key):
         try:
             sup.runCmd(
                 str.format(const.locust_run_command, locust_file, self.unique_statistics_name, host, num_of_users,
@@ -47,7 +48,9 @@ class LocustRunner:
             pass
 
     @allure.step("Run locust distributed mode locally")
-    def cm_mode_locallyd_run_distributed(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time):
+    def cm_mode_locally_run_distributed(self, locust_file, host, num_of_users, spawn_rate, run_time, stop_time,
+                                        app_key):
+        f.create_text_file(const.app_key_path, app_key)
         num_of_workers = multiprocessing.cpu_count() - 1
         cmd = str.format(const.locust_master_command, locust_file, self.unique_statistics_name, num_of_workers, host,
                          num_of_users, spawn_rate, run_time, stop_time, const.locust_statistics_local_run_path)
@@ -60,9 +63,10 @@ class LocustRunner:
             pass
 
     @allure.step("Run locust with env tool locally")
-    def env_run(self, user_classes, host, num_of_users, spawn_rate, run_time):
+    def env_run(self, user_classes, host, num_of_users, spawn_rate, run_time, app_key):
         env = Environment(user_classes=user_classes)
         env.create_local_runner()
+        f.create_text_file(const.app_key_path, app_key)
         env.runner.start(num_of_users, spawn_rate=spawn_rate)
         env.host = host
         gevent.spawn_later(run_time, lambda: env.runner.quit())
@@ -70,7 +74,8 @@ class LocustRunner:
         print(result)
 
     @allure.step("Run locust distributed mode with docker locally")
-    def run_with_docker(self, locust_file_path, worker_num, host, user_num, spawn_rate, run_time):
+    def run_with_docker(self, locust_file_path, worker_num, host, user_num, spawn_rate, run_time, app_key):
+        f.create_text_file(const.app_key_path, app_key)
         docker_master = const.docker_master.copy()
         docker_worker = const.docker_worker.copy()
         docker_services = const.docker_services.copy()
@@ -89,12 +94,14 @@ class LocustRunner:
         sup.runCmd(f"cd {yml_path};{const.docker_compose_up_cmd}")
 
     @allure.step("Run locust distributed mode on GCP cloud")
-    def run_distributed_mode_on_gcp(self, host, expected_workers_num, num_of_users, spawn_rate, run_time,
+    def run_distributed_mode_on_gcp(self, host, expected_workers_num, num_of_users, spawn_rate, run_time, app_key,
                                     locust_file_to_run):
+        f.create_text_file(const.app_key_path, app_key)
         f.replace_master_yaml_value(const.master_deployment_file_path, host)
         f.replace_worker_yaml_value(const.worker_deployment_file_path, host, expected_workers_num)
         docker_file_text = str.format(const.docker_file_text, locust_file_to_run, const.locust_templates,
-                                      const.locust_files_dir, const.locust_tasks_dir, const.docker_image_dir)
+                                      const.locust_files_dir, const.locust_tasks_dir, const.docker_image_dir,
+                                      const.app_key_file)
         run_sh_text = str.format(const.run_sh_text, const.locust_statistic_dir,
                                  expected_workers_num, host, num_of_users, spawn_rate, run_time, locust_file_to_run,
                                  self.unique_log_name)

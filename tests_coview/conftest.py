@@ -15,6 +15,7 @@ def pytest_addoption(parser):
     parser.addoption("--t", "--time_to_run", action="store", default="3m")
     parser.addoption("--ul", "--url", action="store", default="https://coview-automation.texel.live")
     parser.addoption("--lcl", action="store", default="")
+    parser.addoption("--app_key", action="store", default="", required=True)
 
 @events.init_command_line_parser.add_listener
 def init_parser(parser):
@@ -30,7 +31,8 @@ def params(request):
               "spawn_rate": request.config.getoption("--s", "--spawn_rate"),
               "time_to_run": request.config.getoption("--t", "--time_to_run"),
               "url": request.config.getoption("--ul", "--url"),
-              "lcl": request.config.getoption("--lcl")}
+              "lcl": request.config.getoption("--lcl"),
+              "app_key": request.config.getoption("--app_key")}
     return params
 
 @pytest.fixture(scope="session", autouse=True)

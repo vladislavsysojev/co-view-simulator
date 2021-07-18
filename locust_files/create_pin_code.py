@@ -20,6 +20,7 @@ class CreatePin(TaskSet):
         access_token_data = copy.deepcopy(temp.access_token_data)
         access_token_data["userId"] = user_id
         access_token_data["deviceId"] = device_id
+        access_token_data["applicationKey"] = temp.read_file("/locust_files/app_key.txt")
         response = self.client.post("/v1/auth/generateEngagementToken", name="Generate access token",
                                     headers={"Content-Type": "application/json", "USER_ID": user_id},
                                     json=access_token_data)

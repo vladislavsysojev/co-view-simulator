@@ -27,7 +27,10 @@ def set_up(params):
     sup.runCmd(const.gcloud_set_project_cmd)
     if not params["lcl"]:
         sup.runCmd(const.gcloud_cluster_delete)
-        sup.runCmd(const.create_cluster_cmg)
+        min_nodes_num = int(int(params["workers_num"])/6)
+        max_nodes_num = min_nodes_num + 3
+        sup.runCmd(str.format(const.create_cluster_cmg, const.init_cluster_name(), const.gcp_zone, str(min_nodes_num),
+                              str(max_nodes_num)))
     else:
         const.init_cluster_name(params["lcl"])
     sup.runCmd(const.upgrade_cluster_cmd)
@@ -46,7 +49,7 @@ def test_create_device_group(params):
     runner = LocustRunner()
     runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
-                                       "create_device_group.py")
+                                       params["app_key"], "create_device_group.py")
     validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
@@ -56,7 +59,7 @@ def test_end_to_end_co_view(params):
     runner = LocustRunner()
     runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
-                                       "coview_end_to_end_load_test.py")
+                                       params["app_key"], "coview_end_to_end_load_test.py")
     validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
@@ -76,7 +79,7 @@ def test_create_pin_code(params):
     runner = LocustRunner()
     runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"],
-                                       params["time_to_run"], "create_pin_code.py")
+                                       params["time_to_run"], params["app_key"], "create_pin_code.py")
     validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
@@ -85,7 +88,8 @@ def test_create_pin_code(params):
 def test_health(params):
     runner = LocustRunner()
     runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
-                                       params["user_num"], params["spawn_rate"], params["time_to_run"], "health.py")
+                                       params["user_num"], params["spawn_rate"], params["time_to_run"],
+                                       params["app_key"], "health.py")
     validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
@@ -95,7 +99,7 @@ def test_create_room(params):
     runner = LocustRunner()
     runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
-                                       "create_room.py")
+                                       params["app_key"], "create_room.py")
     validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
 
 
@@ -105,5 +109,14 @@ def test_monitoring(params):
     runner = LocustRunner()
     runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
                                        params["user_num"], params["spawn_rate"], params["time_to_run"],
-                                       "coview_monitoring_load_test.py")
+                                       params["app_key"], "coview_monitoring_load_test.py")
+    validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)
+
+
+@allure.title("Co-view end to end load test with leave room")
+def test_end_to_end_with_leave_room(params):
+    runner = LocustRunner()
+    runner.run_distributed_mode_on_gcp(params["url"], params["workers_num"],
+                                       params["user_num"], params["spawn_rate"], params["time_to_run"],
+                                       params["app_key"], "coview_end_to_end_with_leave_room_load_test.py")
     validateLocustResults(runner.unique_statistics_name, runner.unique_log_name)

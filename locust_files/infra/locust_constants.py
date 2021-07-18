@@ -13,6 +13,7 @@ docker_file_text = '''FROM python:3.9.1\n# Add the licenses for third party soft
         \nCOPY {0} .
         \nRUN mkdir {2}
         \nCOPY {1} /{2}
+        \nCOPY {5} /{2}
         \n# Install the required dependencies via pip
         \nRUN pip install -r /{3}/requirements.txt
         \n# Expose the required Locust ports
@@ -81,6 +82,8 @@ persistence_file_path = kub_config_path + persistence_deployment_file
 persistence_clime_file_path = kub_config_path + persistence_volume_deployment_file
 locust_files_path = str.format("{}/locust_files", f.getFullPath(""))
 docker_file_path = str.format("{0}/Dockerfile", locust_files_path)
+app_key_file = "app_key.txt"
+app_key_path = str.format("{0}/{1}", locust_files_path, app_key_file)
 locust_tasks_path = str.format("{}/locust_files/docker-image/locust-tasks", f.getFullPath(""))
 requirements_txt_path = str.format("{0}/requirements.txt", locust_tasks_path)
 rename_sh_path = str.format("{0}/rename.sh", locust_tasks_path)
@@ -154,9 +157,9 @@ gcp_zone = "us-central1-a"
 load_test_cluster_connection_str = f"gcloud container clusters get-credentials {init_cluster_name()} " \
                                    f"--zone {gcp_zone} --project {gcloud_project_id}"
 
-create_cluster_cmg = f"gcloud container clusters create {init_cluster_name()} --zone {gcp_zone}" \
+create_cluster_cmg = "gcloud container clusters create {} --zone {}" \
                      " --scopes 'https://www.googleapis.com/auth/cloud-platform' --machine-type 'c2-standard-8'" \
-                     " --num-nodes '6' --enable-autoscaling --min-nodes '0' --max-nodes '10' --scopes=logging-write,storage-ro" \
+                     " --num-nodes {} --enable-autoscaling --min-nodes '0' --max-nodes {} --scopes=logging-write,storage-ro" \
                      " --addons HorizontalPodAutoscaling,HttpLoadBalancing"
 
 gcp_cluster_status = str.format("""gcloud container clusters list --zone {} | awk '/{}/{}'""", gcp_zone,

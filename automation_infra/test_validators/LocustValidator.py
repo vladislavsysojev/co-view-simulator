@@ -29,7 +29,6 @@ def validateLocustResults(unique_statistics_name, unique_log_name):
     attachTestResults(f"{unique_statistics_name}_stats.csv")
     if fail_result_string:
         failResult(fail_result_string)
-    # return final_result
 
 
 @allure.step("Fail Results")

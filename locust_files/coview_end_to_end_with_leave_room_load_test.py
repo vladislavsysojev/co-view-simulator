@@ -1,46 +1,20 @@
+"""
+Engagement cloud longevity end to end load test locust file
+"""
+
 import json
 import random
 import time
 import uuid
 import copy
-from locust import events
-
-# from locust_files.infra.create_room_setup import create_room_as_setup
-
-# @events.init.add_listener
-# def on_locust_init(environment, **kwargs):
-#     create_room_as_setup(environment)
-#     environment.host
-
 
 from locust import task, TaskSet, constant, HttpUser
-from locust_plugins.users import SocketIOUser
-
 import locust_files.locust_templates as temp
 
-time_list = []
-counter = 0
 
-f = ""
-# from automation_infra.requests_api import rest_api_request_data as req_data
-# from locust_files.infra.locust_infra import LocustTestUser
-
-# @events.init_command_line_parser.add_listener
-# def init_parser(parser):
-#     parser.add_argument("--wb-host", type=str, env_var="LOCUST_WB_HOST", default="ddd", help="It's working")
-#
-#
-# @events.init.add_listener
-# def _(environment, **kw):
-#     print("Custom argument supplied: %s" % environment.parsed_options.wb_host)
-
-class CoViewEndToEnd(TaskSet):
-    # def __init__(self, parent):
-    #     super().__init__(parent)
-
+class CoViewEndToEndLongevity(TaskSet):
     def __init__(self, parent):
         super().__init__(parent)
-        self.on_stop_executed = False
         self.register_channel_data = copy.deepcopy(temp.register_channel_data)
         self.join_room_data = copy.deepcopy(temp.join_room_data)
         self.create_room_data = copy.deepcopy(temp.create_room_data)
@@ -53,37 +27,27 @@ class CoViewEndToEnd(TaskSet):
         self.leave_room_data = copy.deepcopy(temp.leave_room_data)
         self.disconnect_data = copy.deepcopy(temp.disconnect_data)
         self.access_token_data = copy.deepcopy(temp.access_token_data)
+
         self.users_dict = {}
 
     def on_start(self):
-        self.queue_element = int(time.time())
-        time_list.append(self.queue_element)
         self.create_requests_data()
         room_id = self.host_tasks()
         for participant in range(3):
             self.create_requests_data()
-            time.sleep(random.randint(5, 10))
-            self.participant_tasks(room_id, participant)
-        # time.sleep(120)
-        # self.leave_room(room_id)
-
-    def on_stop(self):
-        time_list_set = set(time_list)
-        while time_list:
-            if self.queue_element == time_list_set.pop():
-                print(str(self.queue_element))
-                time_list.remove(self.queue_element)
-                return
             time.sleep(1)
+            self.participant_tasks(room_id, participant)
+        time.sleep(120)
+        self.leave_room(room_id)
 
     def leave_room(self, room_id):
         participant_counter = 0
         is_host = True
-        for user, device in self.users_dict.items():
-            self.leave_room_data["userId"] = user
-            self.leave_room_data["deviceId"] = device
-            self.disconnect_data["userId"] = user
-            self.disconnect_data["deviceId"] = device
+        for access_token, user_data in self.users_dict.items():
+            self.leave_room_data["userId"] = user_data["userId"]
+            self.leave_room_data["deviceId"] = user_data["deviceId"]
+            self.disconnect_data["userId"] = user_data["userId"]
+            self.disconnect_data["deviceId"] = user_data["deviceId"]
             if is_host:
                 is_host = False
                 name_leave = "Leave room host web app"
@@ -93,13 +57,15 @@ class CoViewEndToEnd(TaskSet):
                 name_disconnect = f"Disconnect user participant {str(participant_counter)} web app "
                 participant_counter += 1
             if room_id:
-                response = self.client.post(f"/v1/rooms/{room_id}/leave", name=name_leave,
-                                            headers={"Content-Type": "application/json", "USER_ID": user,
-                                                     "DEVICE_ID": device}, json=self.leave_room_data)
+                self.client.post(f"/v1/rooms/{room_id}/leave", name=name_leave,
+                                 headers={"Content-Type": "application/json",
+                                          "Authorization": access_token, "USER_ID": self.user_id,
+                                          "DEVICE_ID": self.device_id_sdk}, json=self.leave_room_data)
 
-            response = self.client.post(f"/v1/users/disconnect", name=name_disconnect,
-                                        headers={"Content-Type": "application/json", "USER_ID": user,
-                                                 "DEVICE_ID": device}, json=self.disconnect_data)
+            self.client.post(f"/v1/users/disconnect", name=name_disconnect,
+                             headers={"Content-Type": "application/json",
+                                      "Authorization": access_token, "USER_ID": self.user_id,
+                                      "DEVICE_ID": self.device_id_sdk}, json=self.disconnect_data)
 
     def create_requests_data(self):
         self.user_id = str(uuid.uuid4())
@@ -113,7 +79,7 @@ class CoViewEndToEnd(TaskSet):
         self.pin_data["payload"] = self.user_id
         self.attach_data["deviceId"] = self.device_id_web_app
         self.create_room_data["creator"]["id"] = self.user_id
-        self.create_room_data["content"]["id"] = str(random.randint(9, 12))
+        self.create_room_data["content"]["id"] = str(random.randint(5, 8))
         self.join_room_data["userId"] = self.user_id
         self.join_room_data["deviceId"] = self.device_id_web_app
         self.register_channel_data["userId"] = self.user_id
@@ -123,14 +89,13 @@ class CoViewEndToEnd(TaskSet):
         self.access_token_data["deviceId"] = self.device_id_sdk
 
     def host_tasks(self):
-        global counter
-        counter += 1
         room_id = ""
         response = self.client.post("/v1/auth/generateEngagementToken", name="Generate access token host",
                                     headers={"Content-Type": "application/json", "USER_ID": self.user_id},
                                     json=self.access_token_data)
         if response.status_code == 200:
             access_token = json.loads(response.text)["auth"]["accessToken"]
+            self.users_dict[access_token] = {"userId": self.user_id, "deviceId": self.device_id_web_app}
             response = self.client.post("/v1/users/connect", name="Connect host sdk",
                                         headers={"Content-Type": "application/json",
                                                  "Authorization": access_token, "USER_ID": self.user_id,
@@ -161,12 +126,12 @@ class CoViewEndToEnd(TaskSet):
                                                 json=self.login_data_web_app)
 
                     if response.status_code == 200:
-                        response = self.client.put("/v1/pin", name=f"Enter pin host web app",
-                                                   headers={"Content-Type": "application/json",
-                                                            "Authorization": access_token},
-                                                   data=json.dumps(self.enter_pin_data))
+                        self.client.put("/v1/pin", name=f"Enter pin host web app",
+                                        headers={"Content-Type": "application/json",
+                                                 "Authorization": access_token},
+                                        data=json.dumps(self.enter_pin_data))
                         if device_group_id:
-                            response = self.client.post(
+                            self.client.post(
                                 f"/v1/users/{self.user_id}/deviceGroups/{device_group_id}/attach",
                                 name="Attach host web app",
                                 headers={"Content-Type": "application/json", "Authorization": access_token,
@@ -191,13 +156,13 @@ class CoViewEndToEnd(TaskSet):
                                                         json=self.join_room_data)
 
                             if response.status_code == 200:
-                                response = self.client.post(f"/v1/rooms/{room_id}/channels",
-                                                            name="Register channel host web app",
-                                                            headers={"Content-Type": "application/json",
-                                                                     "USER_ID": self.user_id,
-                                                                     "Authorization": access_token,
-                                                                     "DEVICE_ID": self.device_id_web_app},
-                                                            json=self.register_channel_data)
+                                self.client.post(f"/v1/rooms/{room_id}/channels",
+                                                 name="Register channel host web app",
+                                                 headers={"Content-Type": "application/json",
+                                                          "USER_ID": self.user_id,
+                                                          "Authorization": access_token,
+                                                          "DEVICE_ID": self.device_id_web_app},
+                                                 json=self.register_channel_data)
 
         return room_id
 
@@ -209,6 +174,7 @@ class CoViewEndToEnd(TaskSet):
                                         json=self.access_token_data)
             if response.status_code == 200:
                 access_token = json.loads(response.text)["auth"]["accessToken"]
+                self.users_dict[access_token] = {"userId": self.user_id, "deviceId": self.device_id_web_app}
                 response = self.client.post("/v1/users/connect",
                                             name="Connect participant " + str(participant_num) + " sdk",
                                             headers={"Content-Type": "application/json", "USER_ID": self.user_id,
@@ -239,13 +205,13 @@ class CoViewEndToEnd(TaskSet):
                                                     json=self.login_data_web_app)
 
                         if response.status_code == 200:
-                            response = self.client.put("/v1/pin",
-                                                       name=f"Enter pin participant web app" + str(participant_num),
-                                                       headers={"Content-Type": "application/json",
-                                                                "Authorization": access_token},
-                                                       data=json.dumps(self.enter_pin_data))
+                            self.client.put("/v1/pin",
+                                            name=f"Enter pin participant web app" + str(participant_num),
+                                            headers={"Content-Type": "application/json",
+                                                     "Authorization": access_token},
+                                            data=json.dumps(self.enter_pin_data))
                             if device_group_id:
-                                response = self.client.post(
+                                self.client.post(
                                     f"/v1/users/{self.user_id}/deviceGroups/{device_group_id}/attach",
                                     name="Attach participant web app" + str(participant_num),
                                     headers={"Content-Type": "application/json",
@@ -275,9 +241,7 @@ class CoViewEndToEnd(TaskSet):
         pass
 
 
-class CoViewEndToEndUser(HttpUser):
-    # def on_stop(self):
-    #     self.leave_room(self, room_id)
-    tasks = [CoViewEndToEnd]
+class CoViewEndToEndLongevityUser(HttpUser):
+    tasks = [CoViewEndToEndLongevity]
     wait_time = constant(2)
     weight = 1
