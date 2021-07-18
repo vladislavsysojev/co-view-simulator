@@ -3,36 +3,14 @@ import random
 import time
 import uuid
 import copy
-from locust import events
-
-# from locust_files.infra.create_room_setup import create_room_as_setup
-
-# @events.init.add_listener
-# def on_locust_init(environment, **kwargs):
-#     create_room_as_setup(environment)
-#     environment.host
-
 
 from locust import task, TaskSet, constant, HttpUser
-from locust_plugins.users import SocketIOUser
 
 import locust_files.locust_templates as temp
 
 time_list = []
 counter = 0
 
-f = ""
-# from automation_infra.requests_api import rest_api_request_data as req_data
-# from locust_files.infra.locust_infra import LocustTestUser
-
-# @events.init_command_line_parser.add_listener
-# def init_parser(parser):
-#     parser.add_argument("--wb-host", type=str, env_var="LOCUST_WB_HOST", default="ddd", help="It's working")
-#
-#
-# @events.init.add_listener
-# def _(environment, **kw):
-#     print("Custom argument supplied: %s" % environment.parsed_options.wb_host)
 
 class CoViewEndToEnd(TaskSet):
     # def __init__(self, parent):
