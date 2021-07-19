@@ -79,7 +79,7 @@ class CoViewEndToEndLongevity(TaskSet):
         self.pin_data["payload"] = self.user_id
         self.attach_data["deviceId"] = self.device_id_web_app
         self.create_room_data["creator"]["id"] = self.user_id
-        self.create_room_data["content"]["id"] = str(random.randint(5, 8))
+        self.create_room_data["content"]["id"] = str(random.randint(9, 12))
         self.join_room_data["userId"] = self.user_id
         self.join_room_data["deviceId"] = self.device_id_web_app
         self.register_channel_data["userId"] = self.user_id

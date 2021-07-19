@@ -55,21 +55,27 @@ def parseCsvToObjectList(any_class, csv_file):
     return my_list
 
 
-def replace_master_yaml_value(file_path, value):
+def replace_master_yaml_value(file_path, value, image):
+    """
+    TODO: to make function replace any yaml values
+    """
     with open(file_path) as file:
-        # The FullLoader parameter handles the conversion from YAML
-        # scalar values to Python the dictionary format
         yaml_list = yaml.load(file, Loader=yaml.FullLoader)
     yaml_list["spec"]["template"]["spec"]["containers"][0]["env"][1]["value"] = value
+    yaml_list["spec"]["template"]["spec"]["containers"][0]["image"] = image
     with open(file_path, 'w') as file:
         yaml.dump(yaml_list, file)
 
 
-def replace_worker_yaml_value(file_path, host, expected_workers_num):
+def replace_worker_yaml_value(file_path, host, expected_workers_num, image):
+    """
+    TODO: to make function replace any yaml values
+    """
     with open(file_path) as file:
         yaml_list = yaml.load(file, Loader=yaml.FullLoader)
     yaml_list["spec"]["template"]["spec"]["containers"][0]["env"][2]["value"] = host
     yaml_list["spec"]["replicas"] = int(expected_workers_num)
+    yaml_list["spec"]["template"]["spec"]["containers"][0]["image"] = image
     with open(file_path, 'w') as file:
         yaml.dump(yaml_list, file)
 
