@@ -91,8 +91,9 @@ run_sh_path = str.format("{0}/run.sh", locust_tasks_path)
 master_deployment_file_path = str.format("{0}/{1}", kub_config_path, master_deployment_file)
 worker_deployment_file_path = str.format("{0}/{1}", kub_config_path, worker_deployment_file)
 master_service_deployment_file_path = str.format("{0}/{1}", kub_config_path, master_deployment_service_file)
+image_tag = sup.create_global_unique_name_once("latest", 2)
 
-push_image_cmd = "gcloud builds submit --tag gcr.io/charged-mind-247422/loadtest:latest ."
+push_image_cmd = f"gcloud builds submit --tag gcr.io/charged-mind-247422/loadtest:{image_tag} ."
 
 create_pod_cmd = "kubectl apply -f {0}"
 
