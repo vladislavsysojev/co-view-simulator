@@ -27,7 +27,7 @@ def set_up(params):
     sup.runCmd(const.gcloud_set_project_cmd)
     if not params["lcl"]:
         sup.runCmd(const.gcloud_cluster_delete)
-        min_nodes_num = int(int(params["workers_num"])/6)
+        min_nodes_num = int(int(params["workers_num"])/5)
         max_nodes_num = min_nodes_num + 3
         sup.runCmd(str.format(const.create_cluster_cmg, const.init_cluster_name(), const.gcp_zone, str(min_nodes_num),
                               str(max_nodes_num)))
