@@ -96,14 +96,14 @@ class LocustRunner:
     @allure.step("Run locust distributed mode on GCP cloud")
     def run_distributed_mode_on_gcp(self, host, expected_workers_num, num_of_users, spawn_rate, run_time, app_key,
                                     locust_file_to_run):
-        image = str.format(const.image_path, self.project_id, create_global_unique_name('latest', 5))
+        image = str.format(const.image_path, const.gcloud_project_id, sup.create_global_unique_name('latest', 5))
         f.create_text_file(const.app_key_path, app_key)
-        f.replace_master_yaml_value(const.master_deployment_file_path, self.host, image)
+        f.replace_master_yaml_value(const.master_deployment_file_path, host, image)
         # worker deployment yaml file values replacement
-        f.replace_worker_yaml_value(const.worker_deployment_file_path, self.host, self.expected_workers_num, image)
-        docker_file_text = str.format(const.docker_file_text, self.locust_file_to_run, const.locust_templates,
+        f.replace_worker_yaml_value(const.worker_deployment_file_path, host, expected_workers_num, image)
+        docker_file_text = str.format(const.docker_file_text, locust_file_to_run, const.locust_templates,
                                       const.locust_files_dir, const.locust_tasks_dir, const.docker_image_dir,
-                                      app_key_file, locust_support)
+                                      app_key)
         run_sh_text = str.format(const.run_sh_text, const.locust_statistic_dir,
                                  expected_workers_num, host, num_of_users, spawn_rate, run_time, locust_file_to_run,
                                  self.unique_log_name)
@@ -120,8 +120,7 @@ class LocustRunner:
             for pod_name in pods:
                 print(pod_name)
 
-            log.info("Push image to GCP cloud")
-            sup.run_cmd_by_terminal(f"cd {const.locust_files_path};{str.format(const.push_image_cmd, image)}")
+            sup.runCmd(f"cd {const.locust_files_path};{str.format(const.push_image_cmd, image)}")
             sup.runCmd(const.create_master_pod_cmd)
             sup.runCmd(const.create_master_service_pod_cmd)
             sup.runCmd(const.create_worker_pod_cmd)
@@ -144,4 +143,4 @@ class LocustRunner:
             time.sleep(5)
             sup.runCmd(const.copy_locust_statistics_cmd)
             sup.runCmd(str.format(const.delete_pod_cmd, const.persistence_pod_name))
-            sup.run_cmd_by_terminal(str.format(const.delete_image_cmd, image))
+            sup.runCmd(str.format(const.delete_image_cmd, image))
