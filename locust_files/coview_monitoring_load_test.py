@@ -1,23 +1,20 @@
-import copy
-import json
+
 import random
 import uuid
-
-from locust import task, TaskSet, constant, HttpUser, between
-import locust_files.locust_templates as temp
+from locust import task, TaskSet, HttpUser, between
 
 
 class Monitoring(TaskSet):
-
     def __init__(self, parent):
         super().__init__(parent)
-
+        self.content_id = str(random.randint(9, 12))
+        self.room_uuid = f'{str(random.randint(1, 3750))}alex'
     @task
     def host_monitoring(self):
         user_id = str(uuid.uuid4())
-        device_id = str(uuid.uuid4())
-        content_id = str(uuid.uuid4())
-        room_id = str(uuid.uuid4())
+        device_id = f'{str(0)}{self.room_uuid}'
+        content_id = self.content_id
+        room_id = self.room_uuid
         group_id = str(uuid.uuid4())
         sync_state = ["OUT_OF_SYNC", "SYNC"]
         current_distance_ms = random.randint(-500, 500)
@@ -34,13 +31,12 @@ class Monitoring(TaskSet):
         response = self.client.post(f"/v1/report/devices/{device_id}", name="Monitoring host",
                                     headers={"Content-Type": "application/json", "USER_ID": user_id},
                                     json=data)
-
     @task
     def participant_monitoring_1(self):
         user_id = str(uuid.uuid4())
-        device_id = str(uuid.uuid4())
-        content_id = str(uuid.uuid4())
-        room_id = str(uuid.uuid4())
+        device_id = f'{str(1)}{self.room_uuid}'
+        content_id = self.content_id
+        room_id = self.room_uuid
         group_id = str(uuid.uuid4())
         sync_state = ["OUT_OF_SYNC", "SYNC"]
         current_distance_ms = random.randint(-500, 500)
@@ -57,13 +53,12 @@ class Monitoring(TaskSet):
         response = self.client.post(f"/v1/report/devices/{device_id}", name="Monitoring participant 1",
                                     headers={"Content-Type": "application/json", "USER_ID": user_id},
                                     json=data)
-
     @task
     def participant_monitoring_2(self):
         user_id = str(uuid.uuid4())
-        device_id = str(uuid.uuid4())
-        content_id = str(uuid.uuid4())
-        room_id = str(uuid.uuid4())
+        device_id = f'{str(2)}{self.room_uuid}'
+        content_id = self.content_id
+        room_id = self.room_uuid
         group_id = str(uuid.uuid4())
         sync_state = ["OUT_OF_SYNC", "SYNC"]
         current_distance_ms = random.randint(-500, 500)
@@ -80,13 +75,12 @@ class Monitoring(TaskSet):
         response = self.client.post(f"/v1/report/devices/{device_id}", name="Monitoring participant 2",
                                     headers={"Content-Type": "application/json", "USER_ID": user_id},
                                     json=data)
-
     @task
     def participant_monitoring_3(self):
         user_id = str(uuid.uuid4())
-        device_id = str(uuid.uuid4())
-        content_id = str(uuid.uuid4())
-        room_id = str(uuid.uuid4())
+        device_id = f'{str(3)}{self.room_uuid}'
+        content_id = self.content_id
+        room_id = self.room_uuid
         group_id = str(uuid.uuid4())
         sync_state = ["OUT_OF_SYNC", "SYNC"]
         current_distance_ms = random.randint(-500, 500)
@@ -103,8 +97,6 @@ class Monitoring(TaskSet):
         response = self.client.post(f"/v1/report/devices/{device_id}", name="Monitoring participant 3",
                                     headers={"Content-Type": "application/json", "USER_ID": user_id},
                                     json=data)
-
-
 class CretePinUser(HttpUser):
     tasks = [Monitoring]
     wait_time = between(1, 120)
