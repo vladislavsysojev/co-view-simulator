@@ -103,7 +103,7 @@ class LocustRunner:
         f.replace_worker_yaml_value(const.worker_deployment_file_path, host, expected_workers_num, image)
         docker_file_text = str.format(const.docker_file_text, locust_file_to_run, const.locust_templates,
                                       const.locust_files_dir, const.locust_tasks_dir, const.docker_image_dir,
-                                      app_key)
+                                      const.app_key_file)
         run_sh_text = str.format(const.run_sh_text, const.locust_statistic_dir,
                                  expected_workers_num, host, num_of_users, spawn_rate, run_time, locust_file_to_run,
                                  self.unique_log_name)
